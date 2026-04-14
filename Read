@@ -1,4 +1,0 @@
-req= pip install pywin32 PyQt5 win10toast requests
-
-i usually have bug assignments that i recieve updates from inside my outlook. Inside emails.zip there are some emails, which generally follow the same pattern. Make a python app that checks my outlook for any changes related to bugzilla, and adds them to a list, separated by bug. I want to leave it open, so it needs to update once every minute or so.
-the other files in this folder are what i currently have (mostly ideas / templates)
