@@ -1,0 +1,150 @@
+Received: from CPVPR80MB6285.lamprd80.prod.outlook.com (2603:10d6:103:12b::12)
+ by CPWPR80MB7426.lamprd80.prod.outlook.com with HTTPS; Sun, 12 Apr 2026
+ 12:15:48 +0000
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altus.com.br;
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com (2603:10d6:300:a5::16)
+ by CPVPR80MB6285.lamprd80.prod.outlook.com (2603:10d6:103:12b::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.47; Sun, 12 Apr
+ 2026 12:15:47 +0000
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5]) by SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5%4]) with mapi id 15.20.9769.046; Sun, 12 Apr 2026
+ 12:15:47 +0000
+From: sistemas.email@altus.com.br
+To: <luigi.salvatore@altus.com.br>
+Subject: [Bug 30381] [SD Card] Card states on the web page are not clear to
+ the user
+Date: Sun, 12 Apr 2026 12:15:39 +0000
+X-Bugzilla-Reason: AssignedTo Reporter
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Classification: CPU
+X-Bugzilla-Product: HX3040
+X-Bugzilla-Component: MU
+X-Bugzilla-Version: NA
+X-Bugzilla-Keywords: XF_Fase1
+X-Bugzilla-Severity: ENHANCEMENT
+X-Bugzilla-Who: igor.franco@altus.com.br
+X-Bugzilla-Status: ASSIGNED
+X-Bugzilla-Resolution:
+X-Bugzilla-Priority: NA
+X-Bugzilla-Assigned-To: luigi.salvatore@altus.com.br
+X-Bugzilla-Flags:
+X-Bugzilla-Changed-Fields: deadline
+Message-ID: <bug-30381-344-x2q0jx8qD4@http.vmbugzilla.altus.com.br/demandas/>
+In-Reply-To: <bug-30381-344@http.vmbugzilla.altus.com.br/demandas/>
+References: <bug-30381-344@http.vmbugzilla.altus.com.br/demandas/>
+Content-Type: multipart/alternative; boundary="17759961396.ACFc2Ae4.28577"
+Content-Transfer-Encoding: 7bit
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+X-MS-Exchange-Organization-ExpirationStartTime: 12 Apr 2026 12:15:41.9767
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: b595a510-4d8a-45e9-e12c-08de988d375b
+X-MS-Exchange-Organization-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 14
+X-ClientProxiedBy: CP5P284CA0011.BRAP284.PROD.OUTLOOK.COM
+ (2603:10d6:103:95::16) To SCYPR80MB7304.lamprd80.prod.outlook.com
+ (2603:10d6:300:a5::16)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: sistemas.email@altus.com.br
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SCYPR80MB7304:EE_|CPVPR80MB6285:EE_|CPWPR80MB7426:EE_
+X-MS-Office365-Filtering-Correlation-Id: b595a510-4d8a-45e9-e12c-08de988d375b
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|13003099007|18002099003|22082099003|56012099003|8096899003|41050700001;
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SCYPR80MB7304.lamprd80.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(13003099007)(18002099003)(22082099003)(56012099003)(8096899003)(41050700001);DIR:INT;
+X-MS-Exchange-CrossTenant-Network-Message-Id: b595a510-4d8a-45e9-e12c-08de988d375b
+X-MS-Exchange-CrossTenant-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Apr 2026 12:15:42.1207
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 74789cb4-e554-498f-b1c1-968f6757d62a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Qpq3i5AF/OSe+T0+AReozkgKdW6fPRUk12GQxt7ZD1mfh/xU7T19w5dwhSHTppPjc46IFJiipXny7muXNuYlEHtGZsQqrDVsqcfMdf/vD+w=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CPVPR80MB6285
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:05.8881419
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9769.044
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	ZYzWDLTdJmkLkh6Z8lpHVLEBQkMY0pPJNZG6SUvmVa2fZgNBeabDCrpxXqc8ZCc9nBHWh9pm3kXKyA5RGgFwrvNLpW34vaO+y/qJTLFouCwaBEbVDnz5dsqy/HYFWxN2kiVF0ZKNkTOs5hppIkegtgWoH05VqLtf9MfNzAruFbNQwZuK7L9C90gAY6cWh16bOIHESy6E3ub21YoddSRCbKqCm6dTbmt7yYbbCAUer7eGQ5Toqa/OHl1cRFV2fikLIhMAS8Sdqo0ZSl9hIiC4BGOZRsjDveY7rCj1dcUKTDtWH3Kj78tb3tEOWk3BNcFOBWSgvPsoiKFv26k3k02d4ykdRnyHTC3532+KZW43uILIcRwh26xC0TQJJ8pWwNXOhwpdwvjKlfw/I4Hwi0hqV5gmuo6IEESqtYWkSLSs3BI4Ys02mnzKWg1En1mP2lL3S5oQujI/nWbUseiMFSCJqqsxO2CfN96fwUu0uP8sqAiiIyxGBScWYVKCB37sXweR8iYapPsqA7pxXd9Ogq5TRbKILG0pukKEisr5woXS2VxrL8dQEj3U2V4To0xGckfaWqxPKcyhRnUbKM4N6mPY5+BXtt/7OadadTvqm4C1mFdFhnWhJAK0wWVm9XpjT4Cx3wohrI+Q5nA3ScqWep3howRQ/s8RLHk6H0ec481V9WJQ/0Tj1B+JrpVeVz1xll2WNyu0ntzAWTiV8m4OI0BVKbWjuSjQmWXGkVIQXyQHZvs+DY+GGTA+av51rT8VsY6Ho0zQkG2a2Ds1k6AXHCf10NcRcaEW0h+Pm/TFJfYf3QqFFKnObPlJKmC3Q6mvG/Yt/NxT8thQdkxFaV96t27mOU0gsgsgrrGkR2eZ6h4ktBw=
+MIME-Version: 1.0
+
+--17759961396.ACFc2Ae4.28577
+Date: Sun, 12 Apr 2026 09:15:39 -0300
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30381
+
+Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Deadline|                            |2026-04-15
+
+--=20
+You are receiving this mail because:
+You are the assignee for the bug.
+You reported the bug.=
+
+--17759961396.ACFc2Ae4.28577
+Date: Sun, 12 Apr 2026 09:15:39 -0300
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><b=
+ase href=3D"http://vmbugzilla.altus.com.br/demandas/">
+    </head>
+    <body><span class=3D"vcard"><a class=3D"email" href=3D"mailto:igor.fran=
+co@altus.com.br" title=3D"Igor Tedeschi Franco - Altus &lt;igor.franco@altu=
+s.com.br&gt;"> <span class=3D"fn">Igor Tedeschi Franco - Altus</span></a>
+</span> changed
+          <a class=3D"bz_bug_link=20
+          bz_status_ASSIGNED " title=3D"ASSIGNED - [SD Card] Card states on=
+ the web page are not clear to the user" href=3D"http://vmbugzilla.altus.co=
+m.br/demandas/show_bug.cgi?id=3D30381">bug 30381</a>
+          <br>
+             <table border=3D"1" cellspacing=3D"0" cellpadding=3D"8">
+          <tr>
+            <th>What</th>
+            <th>Removed</th>
+            <th>Added</th>
+          </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Deadline</td>
+           <td>
+               &nbsp;
+           </td>
+           <td>2026-04-15
+           </td>
+         </tr></table>
+      <p>
+      </p>
+
+
+      <hr>
+      <span>You are receiving this mail because:</span>
+
+      <ul>
+          <li>You are the assignee for the bug.</li>
+          <li>You reported the bug.</li>
+      </ul>
+    </body>
+</html>=
+
+--17759961396.ACFc2Ae4.28577--

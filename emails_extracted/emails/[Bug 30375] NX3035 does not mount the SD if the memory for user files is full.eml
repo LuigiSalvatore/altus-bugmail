@@ -1,0 +1,153 @@
+Received: from CPWPR80MB6156.lamprd80.prod.outlook.com (2603:10d6:103:e0::8)
+ by CPWPR80MB7426.lamprd80.prod.outlook.com with HTTPS; Mon, 6 Apr 2026
+ 11:54:20 +0000
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altus.com.br;
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com (2603:10d6:300:a5::16)
+ by CPWPR80MB6156.lamprd80.prod.outlook.com (2603:10d6:103:e0::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Mon, 6 Apr
+ 2026 11:54:19 +0000
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5]) by SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5%5]) with mapi id 15.20.9769.018; Mon, 6 Apr 2026
+ 11:54:19 +0000
+From: sistemas.email@altus.com.br
+To: <luigi.salvatore@altus.com.br>
+Subject: [Bug 30375] NX3035 does not mount the SD if the memory for user
+ files is full
+Date: Mon, 6 Apr 2026 11:54:16 +0000
+X-Bugzilla-Reason: Reporter AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Classification: CPU
+X-Bugzilla-Product: NX3035
+X-Bugzilla-Component: MU
+X-Bugzilla-Version: Other
+X-Bugzilla-Keywords:
+X-Bugzilla-Severity: CRITICAL
+X-Bugzilla-Who: igor.franco@altus.com.br
+X-Bugzilla-Status: ASSIGNED
+X-Bugzilla-Resolution:
+X-Bugzilla-Priority: NA
+X-Bugzilla-Assigned-To: luigi.salvatore@altus.com.br
+X-Bugzilla-Flags:
+X-Bugzilla-Changed-Fields: short_desc
+Message-ID: <bug-30375-344-kU6DRpxlat@http.vmbugzilla.altus.com.br/demandas/>
+In-Reply-To: <bug-30375-344@http.vmbugzilla.altus.com.br/demandas/>
+References: <bug-30375-344@http.vmbugzilla.altus.com.br/demandas/>
+Content-Type: multipart/alternative; boundary="17754764561.B5db6AC81.25639"
+Content-Transfer-Encoding: 7bit
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+X-MS-Exchange-Organization-ExpirationStartTime: 06 Apr 2026 11:54:18.1837
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 3ce98952-51d4-43aa-1a87-08de93d33bae
+X-MS-Exchange-Organization-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 14
+X-ClientProxiedBy: CP6P284CA0044.BRAP284.PROD.OUTLOOK.COM
+ (2603:10d6:103:1ac::10) To SCYPR80MB7304.lamprd80.prod.outlook.com
+ (2603:10d6:300:a5::16)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: sistemas.email@altus.com.br
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SCYPR80MB7304:EE_|CPWPR80MB6156:EE_|CPWPR80MB7426:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3ce98952-51d4-43aa-1a87-08de93d33bae
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|13003099007|18002099003|56012099003|8096899003|22082099003|41050700001;
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SCYPR80MB7304.lamprd80.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(13003099007)(18002099003)(56012099003)(8096899003)(22082099003)(41050700001);DIR:INT;
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3ce98952-51d4-43aa-1a87-08de93d33bae
+X-MS-Exchange-CrossTenant-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Apr 2026 11:54:18.3355
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 74789cb4-e554-498f-b1c1-968f6757d62a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: bDOIoHEsrk1P1NW1KEQld+27n4fL7hVAWcNdXx/J3Ml/OHwJODPUYUPKo+tdNTB8EkPpe1/0wJNao1Hgxf9yHwAoT31Z3/01GNyeVMke4QI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CPWPR80MB6156
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:01.9453061
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9769.018
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	kehlN136FhAMLTrCxsXfL2NwJprsHiPw/nwfoM+X2NYscVNt5XvVX0IBLWqciu1Gr1NPWPB10gG5GoX+O8nZZZc3k3WGjZ+E9YloHzfNrUwU2D0p/eTVl78Z4TW4h48ca3bm4jUIFD5sW47uprEuh8VeavIPhJS9DC+PxzzvuKxQFJnEVTaeNyNuxLW99fia4dPEulhhMWXn7tZC1wXi0fWwZq3qrtH9sXyxix0xKyUeQvpa5JES1naZoQX3yWtKChQ6F76YcIZNZSlIw3vYgejQa21raEAOPwRbbE3+fkL4wzS1BiLRkdRv/BonT4GeA1Dr3EKcbJkF6fS8F6d2AIN2+EK0YogOQluTiXx2+wyIRGN8UFuFHa9jKNo5JQMX3t0rl2FVAQOjo6bVcwOZYYZgzaTMTJQ3EGMOmXwdmDIxk03frYGNnC5QlB3pNi10C+tIrjFr0MoEdhcmLutBrf63u6ocSCpIJkEpX/IUfRsXVZk9DRN3LkSmKA1zAM/uDd0HWwW+tVnM2IwPEMv6o4icWbxufb1Oq33PoSKOTzCGpPfVDEZ/fXKd9+F39aXDOzVv51UCt0pOVyEKjDM7JurQo0C1vUw1NXgzxPIyV0m+zedaprfMVfxvnqkwo/Sy6Wuah//FdovyhGkqJybi4VLdP55mSkx4NmD3G9+hXqPGEyh+OKmbNC0XbwdmWgfSagooYArF+PmEhoheenfAeyjQ4hsln5PYKX1yQMpT81LHMXXAtunyQUvXCAocAehlo8caOopLt8A2DTupHJBwpiKOVkv8HicePlpn0PojhvXDSxQc04wAQfESf/mBntEG9cN6+T8pO1ARF1bOm4t1scKKYx4slkrQYc5MnhmKI9k=
+MIME-Version: 1.0
+
+--17754764561.B5db6AC81.25639
+Date: Mon, 6 Apr 2026 08:54:16 -0300
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30375
+
+Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+            Summary|XF does not mount the SD or |NX3035 does not mount the
+                   |USB if the memory for user  |SD if the memory for user
+                   |files is full               |files is full
+
+--=20
+You are receiving this mail because:
+You reported the bug.
+You are the assignee for the bug.=
+
+--17754764561.B5db6AC81.25639
+Date: Mon, 6 Apr 2026 08:54:16 -0300
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><b=
+ase href=3D"http://vmbugzilla.altus.com.br/demandas/">
+    </head>
+    <body><span class=3D"vcard"><a class=3D"email" href=3D"mailto:igor.fran=
+co@altus.com.br" title=3D"Igor Tedeschi Franco - Altus &lt;igor.franco@altu=
+s.com.br&gt;"> <span class=3D"fn">Igor Tedeschi Franco - Altus</span></a>
+</span> changed
+          <a class=3D"bz_bug_link=20
+          bz_status_ASSIGNED " title=3D"ASSIGNED - NX3035 does not mount th=
+e SD if the memory for user files is full" href=3D"http://vmbugzilla.altus.=
+com.br/demandas/show_bug.cgi?id=3D30375">bug 30375</a>
+          <br>
+             <table border=3D"1" cellspacing=3D"0" cellpadding=3D"8">
+          <tr>
+            <th>What</th>
+            <th>Removed</th>
+            <th>Added</th>
+          </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Summary</td>
+           <td>XF does not mount the SD or USB if the memory for user files=
+ is full
+           </td>
+           <td>NX3035 does not mount the SD if the memory for user files is=
+ full
+           </td>
+         </tr></table>
+      <p>
+      </p>
+
+
+      <hr>
+      <span>You are receiving this mail because:</span>
+
+      <ul>
+          <li>You reported the bug.</li>
+          <li>You are the assignee for the bug.</li>
+      </ul>
+    </body>
+</html>=
+
+--17754764561.B5db6AC81.25639--

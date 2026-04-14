@@ -1,0 +1,166 @@
+Received: from CPUPR80MB6742.lamprd80.prod.outlook.com (2603:10d6:103:18d::8)
+ by CPWPR80MB7426.lamprd80.prod.outlook.com with HTTPS; Wed, 8 Apr 2026
+ 17:05:50 +0000
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altus.com.br;
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com (2603:10d6:300:a5::16)
+ by CPUPR80MB6742.lamprd80.prod.outlook.com (2603:10d6:103:18d::8) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Wed, 8 Apr
+ 2026 17:05:49 +0000
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5]) by SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5%5]) with mapi id 15.20.9769.018; Wed, 8 Apr 2026
+ 17:05:49 +0000
+From: sistemas.email@altus.com.br
+To: <luigi.salvatore@altus.com.br>
+Subject: [Bug 30407] FTP diagnostic differ from the documentation
+Date: Wed, 8 Apr 2026 17:05:46 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Classification: Tool
+X-Bugzilla-Product: MT9000
+X-Bugzilla-Component: Diagnostics
+X-Bugzilla-Version: 4.0.0.27
+X-Bugzilla-Keywords:
+X-Bugzilla-Severity: MINOR
+X-Bugzilla-Who: igor.franco@altus.com.br
+X-Bugzilla-Status: ASSIGNED
+X-Bugzilla-Resolution:
+X-Bugzilla-Priority: NA
+X-Bugzilla-Assigned-To: luigi.salvatore@altus.com.br
+X-Bugzilla-Flags:
+X-Bugzilla-Changed-Fields: cc assigned_to bug_status
+Message-ID: <bug-30407-344-zDDC5yECY6@http.vmbugzilla.altus.com.br/demandas/>
+In-Reply-To: <bug-30407-344@http.vmbugzilla.altus.com.br/demandas/>
+References: <bug-30407-344@http.vmbugzilla.altus.com.br/demandas/>
+Content-Type: multipart/alternative; boundary="17756679461.E12c.10846"
+Content-Transfer-Encoding: 7bit
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+X-MS-Exchange-Organization-ExpirationStartTime: 08 Apr 2026 17:05:48.2513
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 8963cf0f-9ef0-44aa-9a1f-08de959114a7
+X-MS-Exchange-Organization-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 14
+X-ClientProxiedBy: CP4P284CA0005.BRAP284.PROD.OUTLOOK.COM
+ (2603:10d6:103:128::23) To SCYPR80MB7304.lamprd80.prod.outlook.com
+ (2603:10d6:300:a5::16)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: sistemas.email@altus.com.br
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SCYPR80MB7304:EE_|CPUPR80MB6742:EE_|CPWPR80MB7426:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8963cf0f-9ef0-44aa-9a1f-08de959114a7
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|8096899003|56012099003|13003099007|22082099003|18002099003|41050700001;
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SCYPR80MB7304.lamprd80.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(8096899003)(56012099003)(13003099007)(22082099003)(18002099003)(41050700001);DIR:INT;
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8963cf0f-9ef0-44aa-9a1f-08de959114a7
+X-MS-Exchange-CrossTenant-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Apr 2026 17:05:48.3882
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 74789cb4-e554-498f-b1c1-968f6757d62a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 9cW+KQ9Fclveexd6g4GWYPCzbZaY5lWnWqmsV+ShvtGdhHeTLWBvxbYj/g1B6Ki5Qqat+8s5Q0uR+DdBbuvVpHTKpIEE1R7HiNyLhxI/Dm8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CPUPR80MB6742
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.1264592
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9769.018
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	YlHtb+pshm6t5l2pfH9tyElU1R63L74C+km1WplADntLi90xwZUJBk43FhJzjtbYsXmufwRrgFabhBo7LPsY26dJT5Io2JpSYgM7gT43qhUD+8eTITdMXRbggcGd/S3svNXPN2aSqngLSHtU17txk3Gs1nKK4jdGHoOuhnpKQjuK+T6BZcZbvNUl+GwU+YA6UISGzQrXgPhpTFm6TXpIFPoZKxWEeha04viaWdK7S7HPR+XxXCap/xEnyIagydPhZ0n9mJVfWhfmrRRc7AHfCF7UdtnST+JVpN1BsOnescVCbecRFMPzcV/7/mnbMunHmnMJvKzTYbuZ/t/g5ePJjJcH/IoGiswgdgd08QQcm/C0TBGwtRTER0nzTn50Qp9RxeydVII8mtHdWOef49b8kP/IhlyxctESy/2yzlZzFWaY68B75KUIYTaVTwgRVBnPgqmZCU11FkyoozMe3GXZcfcLbxSqjAFZk23CDOoWmIoTIs7WN8TzwX3WtWDvWuW5r8cMucRH7UvLP7f17Cy14jpjB47LVgZerMz7Cmluh5qFTyVlNwu99qKhFs5Bgv4AUr+EScRP8QOiFHLwHQtVqpPCOMXQbwF5yjN7/fowjYT13PAMrWRXQq4EWlltNwk3197QfXW01nl9Ghug6a9a7xHuSyLBEo1X6I/YcPvoBBhGJ92ZySVctNJb35t6FRJ0spa6XY4DFAjZLgQtjqokP8fwoyCGZ52Eu7BVE3JboWPS3bHvhUqcKy3nVuB063sSJdqpUbx7ledZGEZPloDipaeNDsbuISvkEn5d47qvrniBDG4Cf3Bao38rV8RciXP+olsbrqf7cqONNK1CAIkI/lXoXvRliYGE3zbmCZ4ixl0=
+MIME-Version: 1.0
+
+--17756679461.E12c.10846
+Date: Wed, 8 Apr 2026 14:05:46 -0300
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30407
+
+Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |igor.franco@altus.com.br
+           Assignee|sw.bugzilla@altus.com.br    |luigi.salvatore@altus.com.b
+                   |                            |r
+             Status|NEW                         |ASSIGNED
+
+--=20
+You are receiving this mail because:
+You are the assignee for the bug.=
+
+--17756679461.E12c.10846
+Date: Wed, 8 Apr 2026 14:05:46 -0300
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><b=
+ase href=3D"http://vmbugzilla.altus.com.br/demandas/">
+    </head>
+    <body><span class=3D"vcard"><a class=3D"email" href=3D"mailto:igor.fran=
+co@altus.com.br" title=3D"Igor Tedeschi Franco - Altus &lt;igor.franco@altu=
+s.com.br&gt;"> <span class=3D"fn">Igor Tedeschi Franco - Altus</span></a>
+</span> changed
+          <a class=3D"bz_bug_link=20
+          bz_status_ASSIGNED " title=3D"ASSIGNED - FTP diagnostic differ fr=
+om the documentation" href=3D"http://vmbugzilla.altus.com.br/demandas/show_=
+bug.cgi?id=3D30407">bug 30407</a>
+          <br>
+             <table border=3D"1" cellspacing=3D"0" cellpadding=3D"8">
+          <tr>
+            <th>What</th>
+            <th>Removed</th>
+            <th>Added</th>
+          </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">CC</td>
+           <td>
+               &nbsp;
+           </td>
+           <td>igor.franco@altus.com.br
+           </td>
+         </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Assignee</td>
+           <td>sw.bugzilla@altus.com.br
+           </td>
+           <td>luigi.salvatore@altus.com.br
+           </td>
+         </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Status</td>
+           <td>NEW
+           </td>
+           <td>ASSIGNED
+           </td>
+         </tr></table>
+      <p>
+      </p>
+
+
+      <hr>
+      <span>You are receiving this mail because:</span>
+
+      <ul>
+          <li>You are the assignee for the bug.</li>
+      </ul>
+    </body>
+</html>=
+
+--17756679461.E12c.10846--

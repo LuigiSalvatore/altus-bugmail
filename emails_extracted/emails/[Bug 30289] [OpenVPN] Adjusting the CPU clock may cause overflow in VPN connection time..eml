@@ -1,0 +1,148 @@
+Received: from RO2PR80MB6174.lamprd80.prod.outlook.com (2603:10d6:10:8d::12)
+ by CPWPR80MB7426.lamprd80.prod.outlook.com with HTTPS; Tue, 31 Mar 2026
+ 17:37:14 +0000
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altus.com.br;
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com (2603:10d6:300:a5::16)
+ by RO2PR80MB6174.lamprd80.prod.outlook.com (2603:10d6:10:8d::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Tue, 31 Mar
+ 2026 17:37:13 +0000
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5]) by SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5%5]) with mapi id 15.20.9769.014; Tue, 31 Mar 2026
+ 17:37:13 +0000
+From: sistemas.email@altus.com.br
+To: <luigi.salvatore@altus.com.br>
+Subject: [Bug 30289] [OpenVPN] Adjusting the CPU clock may cause overflow in
+ VPN connection time.
+Date: Tue, 31 Mar 2026 17:37:09 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Classification: CPU
+X-Bugzilla-Product: XF325
+X-Bugzilla-Component: Software
+X-Bugzilla-Version: 1.14.88.1
+X-Bugzilla-Keywords:
+X-Bugzilla-Severity: MINOR
+X-Bugzilla-Who: igor.franco@altus.com.br
+X-Bugzilla-Status: ASSIGNED
+X-Bugzilla-Resolution:
+X-Bugzilla-Priority: NA
+X-Bugzilla-Assigned-To: luigi.salvatore@altus.com.br
+X-Bugzilla-Flags:
+X-Bugzilla-Changed-Fields: deadline
+Message-ID: <bug-30289-344-bhb3epClCF@http.vmbugzilla.altus.com.br/demandas/>
+In-Reply-To: <bug-30289-344@http.vmbugzilla.altus.com.br/demandas/>
+References: <bug-30289-344@http.vmbugzilla.altus.com.br/demandas/>
+Content-Type: multipart/alternative; boundary="17749786291.3B79451.8489"
+Content-Transfer-Encoding: 7bit
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+X-MS-Exchange-Organization-ExpirationStartTime: 31 Mar 2026 17:37:10.8630
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: be6be578-9781-49aa-58d4-08de8f4c2379
+X-MS-Exchange-Organization-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 14
+X-ClientProxiedBy: CP5P284CA0070.BRAP284.PROD.OUTLOOK.COM
+ (2603:10d6:103:97::21) To SCYPR80MB7304.lamprd80.prod.outlook.com
+ (2603:10d6:300:a5::16)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: sistemas.email@altus.com.br
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SCYPR80MB7304:EE_|RO2PR80MB6174:EE_|CPWPR80MB7426:EE_
+X-MS-Office365-Filtering-Correlation-Id: be6be578-9781-49aa-58d4-08de8f4c2379
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|8096899003|13003099007|56012099003|22082099003|18002099003|41050700001;
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SCYPR80MB7304.lamprd80.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(8096899003)(13003099007)(56012099003)(22082099003)(18002099003)(41050700001);DIR:INT;
+X-MS-Exchange-CrossTenant-Network-Message-Id: be6be578-9781-49aa-58d4-08de8f4c2379
+X-MS-Exchange-CrossTenant-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 31 Mar 2026 17:37:10.9582
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 74789cb4-e554-498f-b1c1-968f6757d62a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: dz6UXMqvu34H/P1AVZT35ufzPAzYRyFMPzAdzfFhp180xH+Nz4dy5LzR4+z8aPvKh7zjKcuBptdhZc3xLuIedPhiTZH/Ld4/DTeXpYRsXnU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: RO2PR80MB6174
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:03.7377861
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9769.009
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	CbIjwjLKaIXi74wlRCObka2fag26lwqv2mNEh3vkOuFJ2rfHTNYQlt5Z0QAo5cIdRfIqApo0Bhnr/pD2Bn21roO7l/YtMYmV6HB2lpGz2SMWIqXH3e5Qwt+3aTs4VqA2sjHdYpg36hhVzs5lI9LrAQ/ipjp1O9MOn9+ucvY0jbq7Jv/sFEBqLDRTJ4tZH4eESvlqnktthWj3pUvC1RwHihML1CqAX716RBncXQH4HQi1YH/GzcIvodVQ7WCGBx//pXLgFk+6pQNgNJYFahSngH3GivDvq+zH2NXeb4sBRcCr3si0au8wePw8qOyo5Tnp1A9rgonUyjoOGqEbiy0IPk6l/oUg77KAqRvKiaWaAh2lwYZ6oUk/5kSqIV8LRb8ZDcvKrcFMzH9eM1ZevhUTcltfv3CKLGENwfOZJeR+SDyLMMbZdAAFx0NR9u9YybWN9WCQvzlbMi4cQ1tThgX2Rwe0bnLKG/ktzo+LJjChiC1X8qu7g9fmCyZ4RO1ellT4G1f6BaXDmRVnUMpLOcFw/ScVIt8jDaTwPrkjD51eWOG66oyStfbrHD147PNTGuXO6NJFGU06lcZR0GFg7xkeUfgnRocyfge7eU95gpBoO5TY2njsXt63n8/4yKAua4ciGfxbnFBvM5D8FPCO6EI9ATlwvGvYlwERtAO/KZd3jZzPDbxRBVuY7xKrIqooUnLTbkPKhjv4IDnomAiGySvzq5oyHQTnvEKrcNrv8g8Ykk/XLpqnW6nBqiSX22NEpfGr7srRHLgfPEZ/Vi1VUk1WZxfgNzvUP+iWD5S4LAW1va4sC2Wvxpz6wR0XVuEb1ZmJOnO0xx70uxaoYcBpJVdPKP2y2rNBaeeBnkQRsyRpe2A=
+MIME-Version: 1.0
+
+--17749786291.3B79451.8489
+Date: Tue, 31 Mar 2026 14:37:09 -0300
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30289
+
+Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Deadline|                            |2026-04-02
+
+--=20
+You are receiving this mail because:
+You are the assignee for the bug.=
+
+--17749786291.3B79451.8489
+Date: Tue, 31 Mar 2026 14:37:09 -0300
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><b=
+ase href=3D"http://vmbugzilla.altus.com.br/demandas/">
+    </head>
+    <body><span class=3D"vcard"><a class=3D"email" href=3D"mailto:igor.fran=
+co@altus.com.br" title=3D"Igor Tedeschi Franco - Altus &lt;igor.franco@altu=
+s.com.br&gt;"> <span class=3D"fn">Igor Tedeschi Franco - Altus</span></a>
+</span> changed
+          <a class=3D"bz_bug_link=20
+          bz_status_ASSIGNED " title=3D"ASSIGNED - [OpenVPN] Adjusting the =
+CPU clock may cause overflow in VPN connection time." href=3D"http://vmbugz=
+illa.altus.com.br/demandas/show_bug.cgi?id=3D30289">bug 30289</a>
+          <br>
+             <table border=3D"1" cellspacing=3D"0" cellpadding=3D"8">
+          <tr>
+            <th>What</th>
+            <th>Removed</th>
+            <th>Added</th>
+          </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Deadline</td>
+           <td>
+               &nbsp;
+           </td>
+           <td>2026-04-02
+           </td>
+         </tr></table>
+      <p>
+      </p>
+
+
+      <hr>
+      <span>You are receiving this mail because:</span>
+
+      <ul>
+          <li>You are the assignee for the bug.</li>
+      </ul>
+    </body>
+</html>=
+
+--17749786291.3B79451.8489--

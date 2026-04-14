@@ -1,0 +1,149 @@
+Received: from RO2PR80MB7593.lamprd80.prod.outlook.com (2603:10d6:10:fa::10)
+ by CPWPR80MB7426.lamprd80.prod.outlook.com with HTTPS; Thu, 9 Apr 2026
+ 17:36:29 +0000
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=altus.com.br;
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com (2603:10d6:300:a5::16)
+ by RO2PR80MB7593.lamprd80.prod.outlook.com (2603:10d6:10:fa::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9769.20; Thu, 9 Apr
+ 2026 17:36:27 +0000
+Received: from SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5]) by SCYPR80MB7304.lamprd80.prod.outlook.com
+ ([fe80::989f:1d1c:641f:9ae5%5]) with mapi id 15.20.9769.018; Thu, 9 Apr 2026
+ 17:36:27 +0000
+From: sistemas.email@altus.com.br
+To: <luigi.salvatore@altus.com.br>
+Subject: [Bug 30196] Images in section 5.20.3 - OpenVPN Configuration do not
+ display key of TA field in OpenVPN configuration
+Date: Thu, 9 Apr 2026 17:36:25 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Classification: CPU
+X-Bugzilla-Product: XF325
+X-Bugzilla-Component: MU
+X-Bugzilla-Version: NA
+X-Bugzilla-Keywords:
+X-Bugzilla-Severity: MINOR
+X-Bugzilla-Who: igor.franco@altus.com.br
+X-Bugzilla-Status: ASSIGNED
+X-Bugzilla-Resolution:
+X-Bugzilla-Priority: NA
+X-Bugzilla-Assigned-To: luigi.salvatore@altus.com.br
+X-Bugzilla-Flags:
+X-Bugzilla-Changed-Fields: assigned_to
+Message-ID: <bug-30196-344-HeG0KfCLVC@http.vmbugzilla.altus.com.br/demandas/>
+In-Reply-To: <bug-30196-344@http.vmbugzilla.altus.com.br/demandas/>
+References: <bug-30196-344@http.vmbugzilla.altus.com.br/demandas/>
+Content-Type: multipart/alternative; boundary="17757561850.7EF9a534.13113"
+Content-Transfer-Encoding: 7bit
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+X-MS-Exchange-Organization-ExpirationStartTime: 09 Apr 2026 17:36:27.4390
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: f2cfb566-0cf9-4e20-1ca8-08de965e874f
+X-MS-Exchange-Organization-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Internal
+X-MS-Exchange-Organization-AuthMechanism: 14
+X-ClientProxiedBy: CP3P284CA0126.BRAP284.PROD.OUTLOOK.COM
+ (2603:10d6:103:6a::11) To SCYPR80MB7304.lamprd80.prod.outlook.com
+ (2603:10d6:300:a5::16)
+X-MS-Exchange-Organization-MessageDirectionality: Originating
+Return-Path: sistemas.email@altus.com.br
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SCYPR80MB7304:EE_|RO2PR80MB7593:EE_|CPWPR80MB7426:EE_
+X-MS-Office365-Filtering-Correlation-Id: f2cfb566-0cf9-4e20-1ca8-08de965e874f
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|8096899003|13003099007|56012099003|18002099003|22082099003|41050700001;
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SCYPR80MB7304.lamprd80.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(8096899003)(13003099007)(56012099003)(18002099003)(22082099003)(41050700001);DIR:INT;
+X-MS-Exchange-CrossTenant-Network-Message-Id: f2cfb566-0cf9-4e20-1ca8-08de965e874f
+X-MS-Exchange-CrossTenant-AuthSource: SCYPR80MB7304.lamprd80.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Apr 2026 17:36:27.5135
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 74789cb4-e554-498f-b1c1-968f6757d62a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 1o1kx7FvarhAhdEqHxLsMZmlNn0yK4BIaXuzS8UcOczRG4CtBiNL+8Dxalw3VfLQsUV7frH9gVmiaZK2HWxtfeZ14y/eACatK9lwdYZGn7c=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: RO2PR80MB7593
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:01.5381137
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9769.018
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(425001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	3fESZNa4k+2a0r13Oe2vimhijSMLXWogEszqN7fw5KgBcN1N+cFRtC+071KLCxZVLoxyGxkHy7X4sbdS73cEownkfLbHqs1jrsK6EnYSGDcpyoRs/TCVRDmioTuvLD+5cgM4rQHo7RGSAAbO5zMpFVttklnvWt4rAA5uMaVaXADXEhgbF38EqSzGGEKrjCDiQPupYBmSpp5135cdpMX1fkc8o1cIO0VRYEWTCtTt3r/odiEhVkfBlAYzXhPmiPjkAUc1CuR3gcB3rJWY95XeZJpJ/BQ7YbD19Y3SVZK385ej8Us/3yeaNL3ZNGFZpjtO3GFxekEfByay+fZyfTXXMRnojfrfTqGRuDkwCEXJznvbVTcG9PhQNEdra5ypZ3FfuZ4sQvekkI2ziTHFrPhri++tir966NuXcb+UW8C/UP16C4h5UyW5852EDHPMLVfrKhJ96oE+vp8/TcHexlgEpgTcSJt6DgSo8V29ASLETO1ujDqmr6L3DvN36xhTgNj7hbP2B8LNRmQ6y0DahpKE5vfpfOujD+50qwxP88s0ky/3U+l2CQ4cEUSpS4dmszLOc4D4gwuvUvlAmlWLnUUgyCW9FcZ7WqxWbskRiYvufu2e16D/WIcYzXNC7FaOhfM/KNHcrwbhP3QgVfenwL6MblB/l9Gigx7n+YnGG8SdPgw1AneDtYwOyQ02fgSJInrrU9TPlH3ZaEP297uwZBIhiE5hXiClrHPF+Eh9maUCiC3NbrvULzeGvWWHreB+N7oeJhWJW7t2SOTZq/HKpZJJO3deoVvtRTDU5ATHrcAPIRqFzZvgt6AMuMjFJIbqmvZcNIntnZA9Wi/I9/rMt6EVcA+PHrKd4iM+QN7yoOX7ZXU=
+MIME-Version: 1.0
+
+--17757561850.7EF9a534.13113
+Date: Thu, 9 Apr 2026 14:36:25 -0300
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30196
+
+Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+           Assignee|igor.franco@altus.com.br    |luigi.salvatore@altus.com.b
+                   |                            |r
+
+--=20
+You are receiving this mail because:
+You are the assignee for the bug.=
+
+--17757561850.7EF9a534.13113
+Date: Thu, 9 Apr 2026 14:36:25 -0300
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: http://vmbugzilla.altus.com.br/demandas/
+Auto-Submitted: auto-generated
+
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><b=
+ase href=3D"http://vmbugzilla.altus.com.br/demandas/">
+    </head>
+    <body><span class=3D"vcard"><a class=3D"email" href=3D"mailto:igor.fran=
+co@altus.com.br" title=3D"Igor Tedeschi Franco - Altus &lt;igor.franco@altu=
+s.com.br&gt;"> <span class=3D"fn">Igor Tedeschi Franco - Altus</span></a>
+</span> changed
+          <a class=3D"bz_bug_link=20
+          bz_status_ASSIGNED " title=3D"ASSIGNED - Images in section 5.20.3=
+ - OpenVPN Configuration do not display key of TA field in OpenVPN configur=
+ation" href=3D"http://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=3D30=
+196">bug 30196</a>
+          <br>
+             <table border=3D"1" cellspacing=3D"0" cellpadding=3D"8">
+          <tr>
+            <th>What</th>
+            <th>Removed</th>
+            <th>Added</th>
+          </tr>
+
+         <tr>
+           <td style=3D"text-align:right;">Assignee</td>
+           <td>igor.franco@altus.com.br
+           </td>
+           <td>luigi.salvatore@altus.com.br
+           </td>
+         </tr></table>
+      <p>
+      </p>
+
+
+      <hr>
+      <span>You are receiving this mail because:</span>
+
+      <ul>
+          <li>You are the assignee for the bug.</li>
+      </ul>
+    </body>
+</html>=
+
+--17757561850.7EF9a534.13113--
