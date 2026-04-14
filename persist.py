@@ -8,9 +8,10 @@ def load_data():
     global bugs
     try:
         with open(DATA_FILE, "r") as f:
-            bugs.update(json.load(f))
+            data = json.load(f)
+            bugs = defaultdict(list, data)
     except:
-        pass
+        bugs = defaultdict(list)
 
 def save_data():
     with open(DATA_FILE, "w") as f:

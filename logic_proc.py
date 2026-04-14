@@ -10,25 +10,37 @@ def parse_email(body):
     updates = []
     
     # Check for the table pattern
-    # What    |Removed                     |Added
+    #            What    |Removed                     |Added
     # ----------------------------------------------------------------------------
-    # Assignee|igor.franco@altus.com.br    |luigi.salvatore@altus.com.b
+    #            Deadline|                            |2026-04-15
     
-    table_match = re.search(r'What\s+\|Removed\s+\|Added\s+\n-+\n(.*?)\n\n', body, re.DOTALL)
+    table_match = re.search(r'\s*What\s+\|\s*Removed\s+\|\s*Added\s*\r?\n-+\r?\n(.*?)\r?\n(?:\s*\r?\n|--)', body, re.DOTALL)
     if table_match:
         rows = table_match.group(1).split('\n')
+        current_update = None
         for row in rows:
-            parts = [p.strip() for p in row.split('|')]
-            if len(parts) >= 3:
-                field, removed, added = parts[0], parts[1], parts[2]
-                updates.append(f"{field}: {removed} -> {added}")
+            if '|' in row:
+                parts = [p.strip() for p in row.split('|')]
+                if len(parts) >= 3:
+                    field, removed, added = parts[0], parts[1], parts[2]
+                    if field:
+                        if current_update:
+                            updates.append(f"{current_update['field']}: {current_update['removed']} -> {current_update['added']}")
+                        current_update = {"field": field, "removed": removed, "added": added}
+                    else:
+                        if current_update:
+                            current_update["removed"] += " " + removed
+                            current_update["added"] += " " + added
+        if current_update:
+            updates.append(f"{current_update['field']}: {current_update['removed']} -> {current_update['added']}")
     
     # Check for comments
-    comment_match = re.search(r'--- Comment #\d+ from (.*?) ---.*?\n(.*?)\n--', body, re.DOTALL)
+    # --- Comment #1 from Igor Tedeschi Franco - Altus <igor.franco@altus.com.br> ---
+    comment_match = re.search(r'--- Comment #\d+ from (.*?) ---\r?\n(.*?)\r?\n(?:--|You are receiving this mail because:)', body, re.DOTALL)
     if comment_match:
         who = comment_match.group(1).strip()
         comment = comment_match.group(2).strip()
-        updates.append(f"Comment from {who}: {comment}")
+        updates.append(f"Comment from {who}:\n{comment}")
 
     return updates
 
