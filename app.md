@@ -1,0 +1,17 @@
+- Only Windows
+- Desktop GUI
+- - Group 1 (main Page)
+- - - Information about the bug im currently working on
+- - - a button to add a currently working on bug
+- - - a button to 'complete' (remove) the currently working on bug
+- - - a button to put the current bug on hold
+- - - a button to remove a bug from hold
+- - Group 2
+- - - All bugs
+- - - ASSIGNED bugs
+- - - RESOLVED FIXED bugs 
+- - - RESOLVED IMPLEMENTED bugs
+- A way to configure Bugzilla configurations (API key, user email, etc)
+- Have persistant data
+- Integration with Bugzilla via REST API (https://vmbugzilla.altus.com.br/)
+- Realtime updates (max 1 minute of delay)
