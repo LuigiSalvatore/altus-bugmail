@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import requests
-from requests.auth import HTTPBasicAuth
 import json
 import os
+import webbrowser
 from datetime import datetime
 import threading
 import time
+from apiBugzilla import Bugzilla
 
 class BugzillaTracker:
     def __init__(self, root):
@@ -21,6 +22,25 @@ class BugzillaTracker:
         # Load configuration and data
         self.config = self.load_config()
         self.data = self.load_data()
+        self.view_settings = self.config.get('view_settings', {
+            'Priority': True,
+            'Assignee': True,
+            'Product': False,
+            'Activity': False,
+            'Sub-Activity': False,
+            'Importance': False,
+            'Version': False
+        })
+        self.view_vars = {name: tk.BooleanVar(value=self.view_settings.get(name, default)) for name, default in {
+            'Priority': True,
+            'Assignee': True,
+            'Product': False,
+            'Activity': False,
+            'Sub-Activity': False,
+            'Importance': False,
+            'Version': False
+        }.items()}
+        self.bugzilla_client = self.create_bugzilla_client()
         
         # Auto-update flag
         self.auto_update_running = False
@@ -33,18 +53,40 @@ class BugzillaTracker:
         self.start_auto_update()
         
         # Initial data fetch
-        if self.config.get('api_key') and self.config.get('bugzilla_url'):
+        if self.config.get('api_key'):
             self.refresh_all_bugs()
     
     def load_config(self):
         """Load Bugzilla configuration from file"""
         if os.path.exists(self.config_file):
             with open(self.config_file, 'r') as f:
-                return json.load(f)
+                config = json.load(f)
+            config.setdefault('bugzilla_url', 'https://vmbugzilla.altus.com.br/demandas')
+            config.setdefault('api_key', '')
+            config.setdefault('user_email', '')
+            config.setdefault('view_settings', {
+                'Priority': True,
+                'Assignee': True,
+                'Product': False,
+                'Activity': False,
+                'Sub-Activity': False,
+                'Importance': False,
+                'Version': False
+            })
+            return config
         return {
-            'bugzilla_url': 'https://vmbugzilla.altus.com.br',
+            'bugzilla_url': 'https://vmbugzilla.altus.com.br/demandas',
             'api_key': '',
-            'user_email': ''
+            'user_email': '',
+            'view_settings': {
+                'Priority': True,
+                'Assignee': True,
+                'Product': False,
+                'Activity': False,
+                'Sub-Activity': False,
+                'Importance': False,
+                'Version': False
+            }
         }
     
     def save_config(self):
@@ -67,6 +109,33 @@ class BugzillaTracker:
             'last_update': None
         }
     
+    def create_bugzilla_client(self):
+        """Create the Bugzilla API client using configured URL and API key."""
+        if not self.config.get('api_key'):
+            return None
+        url = self.config.get('bugzilla_url', '').strip()
+        if url:
+            return Bugzilla(self.config['api_key'], url=url)
+        return Bugzilla(self.config['api_key'])
+    
+    def normalize_bug(self, bug):
+        return {
+            'id': bug.get('id'),
+            'summary': bug.get('summary'),
+            'status': bug.get('status'),
+            'priority': bug.get('priority'),
+            'severity': bug.get('severity'),
+            'assigned_to': bug.get('assigned_to_detail', {}).get('email', bug.get('assigned_to', 'Unassigned')),
+            'product': bug.get('product', ''),
+            'activity': bug.get('cf_activity', bug.get('activity', '')),
+            'sub_activity': bug.get('cf_subactivity', bug.get('sub_activity', '')),
+            'importance': bug.get('importance', ''),
+            'version': bug.get('version', ''),
+            'description': bug.get('description', ''),
+            'resolution': bug.get('resolution', ''),
+            'last_change_time': bug.get('last_change_time')
+        }
+    
     def save_data(self):
         """Save persistent data to file"""
         self.data['last_update'] = datetime.now().isoformat()
@@ -84,6 +153,23 @@ class BugzillaTracker:
         settings_menu.add_command(label="Configure Bugzilla", command=self.configure_bugzilla)
         settings_menu.add_separator()
         settings_menu.add_command(label="Refresh All", command=self.refresh_all_bugs)
+
+        # View menu
+        view_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="View", menu=view_menu)
+        view_menu.add_checkbutton(label="Show Priority", variable=self.view_vars['Priority'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Assignee", variable=self.view_vars['Assignee'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Product", variable=self.view_vars['Product'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Activity", variable=self.view_vars['Activity'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Sub-Activity", variable=self.view_vars['Sub-Activity'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Importance", variable=self.view_vars['Importance'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Version", variable=self.view_vars['Version'], command=self.update_display_columns)
+        view_menu.add_separator()
+        view_menu.add_command(label="Move current main tab left", command=self.move_current_main_tab_left)
+        view_menu.add_command(label="Move current main tab right", command=self.move_current_main_tab_right)
+        view_menu.add_separator()
+        view_menu.add_command(label="Move active bug category left", command=self.move_current_bug_category_left)
+        view_menu.add_command(label="Move active bug category right", command=self.move_current_bug_category_right)
     
     def create_ui(self):
         """Create the main UI"""
@@ -144,20 +230,20 @@ class BugzillaTracker:
         self.notebook.add(bugs_frame, text="All Bugs")
         
         # Create sub-notebook for bug categories
-        bugs_notebook = ttk.Notebook(bugs_frame)
-        bugs_notebook.pack(fill='both', expand=True, padx=5, pady=5)
+        self.bugs_notebook = ttk.Notebook(bugs_frame)
+        self.bugs_notebook.pack(fill='both', expand=True, padx=5, pady=5)
         
         # All Bugs Tab
-        self.all_bugs_tree = self.create_bug_tree(bugs_notebook, "All Bugs")
+        self.all_bugs_tree = self.create_bug_tree(self.bugs_notebook, "All Bugs")
         
         # Assigned Bugs Tab
-        self.assigned_bugs_tree = self.create_bug_tree(bugs_notebook, "Assigned")
+        self.assigned_bugs_tree = self.create_bug_tree(self.bugs_notebook, "Assigned")
         
         # Resolved Fixed Tab
-        self.resolved_fixed_tree = self.create_bug_tree(bugs_notebook, "Resolved - Fixed")
+        self.resolved_fixed_tree = self.create_bug_tree(self.bugs_notebook, "Resolved - Fixed")
         
         # Resolved Implemented Tab
-        self.resolved_implemented_tree = self.create_bug_tree(bugs_notebook, "Resolved - Implemented")
+        self.resolved_implemented_tree = self.create_bug_tree(self.bugs_notebook, "Resolved - Implemented")
         
         # Refresh button
         ttk.Button(bugs_frame, text="Refresh All Bugs", command=self.refresh_all_bugs).pack(pady=5)
@@ -178,25 +264,81 @@ class BugzillaTracker:
         scrollbar = ttk.Scrollbar(tree_frame)
         scrollbar.pack(side='right', fill='y')
         
-        tree = ttk.Treeview(tree_frame, columns=('ID', 'Summary', 'Status', 'Priority', 'Assignee'), 
-                           show='headings', yscrollcommand=scrollbar.set)
+        tree = ttk.Treeview(
+            tree_frame,
+            columns=('ID', 'Summary', 'Status', 'Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version'),
+            show='headings',
+            yscrollcommand=scrollbar.set
+        )
         
         tree.heading('ID', text='Bug ID')
         tree.heading('Summary', text='Summary')
         tree.heading('Status', text='Status')
         tree.heading('Priority', text='Priority')
         tree.heading('Assignee', text='Assignee')
+        tree.heading('Product', text='Product')
+        tree.heading('Activity', text='Activity')
+        tree.heading('Sub-Activity', text='Sub-Activity')
+        tree.heading('Importance', text='Importance')
+        tree.heading('Version', text='Version')
         
         tree.column('ID', width=80)
         tree.column('Summary', width=400)
         tree.column('Status', width=120)
         tree.column('Priority', width=80)
         tree.column('Assignee', width=150)
+        tree.column('Product', width=120)
+        tree.column('Activity', width=120)
+        tree.column('Sub-Activity', width=120)
+        tree.column('Importance', width=120)
+        tree.column('Version', width=120)
+        
+        tree['displaycolumns'] = self.get_display_columns()
         
         tree.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=tree.yview)
         
+        # Bind double-click and Enter key to open bug in browser
+        tree.bind('<Double-1>', lambda e: self.open_bug_in_browser(tree))
+        tree.bind('<Return>', lambda e: self.open_bug_in_browser(tree))
+        
         return tree
+    
+    def get_display_columns(self):
+        columns = ['ID', 'Summary', 'Status']
+        for name in ['Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version']:
+            if self.view_vars.get(name) and self.view_vars[name].get():
+                columns.append(name)
+        return columns
+    
+    def update_display_columns(self):
+        self.view_settings = {name: var.get() for name, var in self.view_vars.items()}
+        self.config['view_settings'] = self.view_settings
+        self.save_config()
+        for tree in [self.all_bugs_tree, self.assigned_bugs_tree, self.resolved_fixed_tree, self.resolved_implemented_tree]:
+            tree['displaycolumns'] = self.get_display_columns()
+    
+    def move_current_main_tab_left(self):
+        current = self.notebook.index(self.notebook.select())
+        if current > 0:
+            self.notebook.insert(current - 1, self.notebook.select())
+    
+    def move_current_main_tab_right(self):
+        current = self.notebook.index(self.notebook.select())
+        count = len(self.notebook.tabs())
+        if current < count - 1:
+            self.notebook.insert(current + 1, self.notebook.select())
+    
+    def move_current_bug_category_left(self):
+        current = self.bugs_notebook.index(self.bugs_notebook.select())
+        if current > 0:
+            self.bugs_notebook.insert(current - 1, self.bugs_notebook.select())
+    
+    def move_current_bug_category_right(self):
+        current = self.bugs_notebook.index(self.bugs_notebook.select())
+        count = len(self.bugs_notebook.tabs())
+        if current < count - 1:
+            self.bugs_notebook.insert(current + 1, self.bugs_notebook.select())
     
     def configure_bugzilla(self):
         """Open configuration dialog"""
@@ -229,6 +371,7 @@ class BugzillaTracker:
             self.config['user_email'] = email_entry.get()
             self.config['api_key'] = api_entry.get()
             self.save_config()
+            self.bugzilla_client = self.create_bugzilla_client()
             messagebox.showinfo("Success", "Configuration saved successfully!")
             config_window.destroy()
             self.refresh_all_bugs()
@@ -303,8 +446,21 @@ class BugzillaTracker:
             info += f"Status: {bug.get('status', 'N/A')}\n"
             info += f"Priority: {bug.get('priority', 'N/A')}\n"
             info += f"Assignee: {bug.get('assigned_to', 'N/A')}\n"
+            info += f"Product: {bug.get('product', 'N/A')}\n"
+            info += f"Activity: {bug.get('activity', 'N/A')}\n"
+            info += f"Sub-Activity: {bug.get('sub_activity', 'N/A')}\n"
+            info += f"Importance: {bug.get('importance', 'N/A')}\n"
+            info += f"Version: {bug.get('version', 'N/A')}\n"
             info += f"Severity: {bug.get('severity', 'N/A')}\n"
             info += f"\nDescription:\n{bug.get('description', 'N/A')}"
+            comments = bug.get('comments', [])
+            if comments:
+                info += "\n\nComments:\n"
+                for comment in comments:
+                    author = comment.get('author', 'Unknown')
+                    created = comment.get('creation_time', '')
+                    text = comment.get('text', '').strip()
+                    info += f"--- {author} {created} ---\n{text}\n\n"
             self.current_bug_text.insert('1.0', info)
         else:
             self.current_bug_text.insert('1.0', "No bug currently being worked on")
@@ -317,59 +473,59 @@ class BugzillaTracker:
     
     def fetch_bug(self, bug_id):
         """Fetch a single bug from Bugzilla"""
-        if not self.config.get('api_key'):
+        if not self.bugzilla_client:
             raise Exception("API key not configured")
-        
-        url = f"{self.config['bugzilla_url']}/rest/bug/{bug_id}"
-        headers = {'Authorization': f"Bearer {self.config['api_key']}"}
-        
-        response = requests.get(url, headers=headers, verify=True)
-        response.raise_for_status()
-        
-        data = response.json()
-        if 'bugs' in data and len(data['bugs']) > 0:
-            bug = data['bugs'][0]
-            return {
-                'id': bug.get('id'),
-                'summary': bug.get('summary'),
-                'status': bug.get('status'),
-                'priority': bug.get('priority'),
-                'severity': bug.get('severity'),
-                'assigned_to': bug.get('assigned_to_detail', {}).get('email', 'Unassigned'),
-                'description': bug.get('description', ''),
-                'last_change_time': bug.get('last_change_time')
-            }
+
+        bugs = self.bugzilla_client.Get_Bug_Information(
+            bug_id,
+            'id',
+            'summary',
+            'status',
+            'priority',
+            'severity',
+            'assigned_to',
+            'product',
+            'cf_activity',
+            'cf_subactivity',
+            'importance',
+            'version',
+            'description',
+            'last_change_time'
+        )
+        if bugs and len(bugs) > 0:
+            bug = self.normalize_bug(bugs[0])
+            bug['comments'] = self.fetch_comments(bug_id)
+            return bug
         return None
     
     def fetch_bugs(self, filters=None):
         """Fetch bugs from Bugzilla with optional filters"""
-        if not self.config.get('api_key'):
+        if not self.bugzilla_client:
             return []
         
-        url = f"{self.config['bugzilla_url']}/rest/bug"
-        headers = {'Authorization': f"Bearer {self.config['api_key']}"}
-        
         params = filters or {}
-        
         try:
-            response = requests.get(url, headers=headers, params=params, verify=True)
-            response.raise_for_status()
-            
-            data = response.json()
-            bugs = []
-            for bug in data.get('bugs', []):
-                bugs.append({
-                    'id': bug.get('id'),
-                    'summary': bug.get('summary'),
-                    'status': bug.get('status'),
-                    'priority': bug.get('priority'),
-                    'severity': bug.get('severity'),
-                    'assigned_to': bug.get('assigned_to_detail', {}).get('email', 'Unassigned'),
-                    'description': bug.get('description', ''),
-                    'resolution': bug.get('resolution', ''),
-                    'last_change_time': bug.get('last_change_time')
-                })
-            return bugs
+            bugs = self.bugzilla_client.MakeRequest(
+                params,
+                'id',
+                'summary',
+                'status',
+                'priority',
+                'severity',
+                'assigned_to',
+                'assigned_to_detail',
+                'product',
+                'cf_activity',
+                'cf_subactivity',
+                'importance',
+                'version',
+                'description',
+                'resolution',
+                'last_change_time'
+            )
+            if not bugs:
+                return []
+            return [self.normalize_bug(bug) for bug in bugs]
         except Exception as e:
             print(f"Error fetching bugs: {e}")
             return []
@@ -380,22 +536,32 @@ class BugzillaTracker:
             messagebox.showwarning("Warning", "Please configure Bugzilla settings first")
             return
         
+        if not self.config.get('user_email'):
+            messagebox.showwarning("Warning", "Please configure user email to fetch assigned bugs")
+            return
+        
         try:
-            # Fetch all bugs
-            self.data['all_bugs'] = self.fetch_bugs()
+            assigned_to = self.config['user_email']
             
-            # Fetch assigned bugs
-            if self.config.get('user_email'):
-                self.data['assigned_bugs'] = self.fetch_bugs({'assigned_to': self.config['user_email']})
+            # Fetch all bugs assigned to the configured user
+            self.data['all_bugs'] = self.fetch_bugs({'assigned_to': assigned_to})
             
-            # Fetch resolved fixed bugs
+            # Fetch assigned bugs (only ASSIGNED status)
+            self.data['assigned_bugs'] = self.fetch_bugs({
+                'assigned_to': assigned_to,
+                'status': 'ASSIGNED'
+            })
+            
+            # Fetch resolved fixed bugs assigned to the configured user
             self.data['resolved_fixed_bugs'] = self.fetch_bugs({
+                'assigned_to': assigned_to,
                 'status': 'RESOLVED',
                 'resolution': 'FIXED'
             })
             
-            # Fetch resolved implemented bugs
+            # Fetch resolved implemented bugs assigned to the configured user
             self.data['resolved_implemented_bugs'] = self.fetch_bugs({
+                'assigned_to': assigned_to,
                 'status': 'RESOLVED',
                 'resolution': 'IMPLEMENTED'
             })
@@ -429,8 +595,42 @@ class BugzillaTracker:
                 bug.get('summary', '')[:100],
                 bug.get('status', ''),
                 bug.get('priority', ''),
-                bug.get('assigned_to', '')
+                bug.get('assigned_to', ''),
+                bug.get('product', ''),
+                bug.get('activity', ''),
+                bug.get('sub_activity', ''),
+                bug.get('importance', ''),
+                bug.get('version', '')
             ))
+    
+    def fetch_comments(self, bug_id):
+        if not self.bugzilla_client:
+            return []
+        try:
+            return self.bugzilla_client.Get_Bug_Comment(bug_id) or []
+        except Exception as e:
+            print(f"Error fetching bug comments: {e}")
+            return []
+    
+    def open_bug_in_browser(self, tree):
+        """Open the selected bug in the default web browser"""
+        selection = tree.selection()
+        if selection:
+            item = selection[0]
+            values = tree.item(item, 'values')
+            if values and len(values) > 0:
+                bug_id = values[0]  # Bug ID is the first column
+                if bug_id:
+                    # Construct the Bugzilla URL
+                    base_url = self.config.get('bugzilla_url', '').rstrip('/')
+                    if '/demandas' not in base_url:
+                        base_url += '/demandas'
+                    bug_url = f"{base_url}/show_bug.cgi?id={bug_id}"
+                    
+                    try:
+                        webbrowser.open(bug_url)
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to open browser: {str(e)}")
     
     def start_auto_update(self):
         """Start the auto-update thread"""

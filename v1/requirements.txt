@@ -1,4 +1,0 @@
-pywin32
-PyQt5
-win10toast
-requests
