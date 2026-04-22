@@ -102,10 +102,10 @@ class BugzillaTracker:
         return {
             'current_bug': None,
             'on_hold_bugs': [],
-            'all_bugs': [],
             'assigned_bugs': [],
             'resolved_fixed_bugs': [],
             'resolved_implemented_bugs': [],
+            'all_bugs': [],
             'last_update': None
         }
     
@@ -233,9 +233,6 @@ class BugzillaTracker:
         self.bugs_notebook = ttk.Notebook(bugs_frame)
         self.bugs_notebook.pack(fill='both', expand=True, padx=5, pady=5)
         
-        # All Bugs Tab
-        self.all_bugs_tree = self.create_bug_tree(self.bugs_notebook, "All Bugs")
-        
         # Assigned Bugs Tab
         self.assigned_bugs_tree = self.create_bug_tree(self.bugs_notebook, "Assigned")
         
@@ -244,6 +241,9 @@ class BugzillaTracker:
         
         # Resolved Implemented Tab
         self.resolved_implemented_tree = self.create_bug_tree(self.bugs_notebook, "Resolved - Implemented")
+                
+        # All Bugs Tab
+        self.all_bugs_tree = self.create_bug_tree(self.bugs_notebook, "All Bugs")
         
         # Refresh button
         ttk.Button(bugs_frame, text="Refresh All Bugs", command=self.refresh_all_bugs).pack(pady=5)

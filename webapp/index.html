@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bugzilla Tracker</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="header-brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      Bugzilla Tracker
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" id="btn-refresh">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        Refresh
+      </button>
+      <button class="btn btn-ghost btn-icon" id="btn-settings" title="Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Status Bar -->
+  <div id="status-bar">
+    <div id="status-dot"></div>
+    <span id="status-text">Connecting…</span>
+    <div class="spacer"></div>
+    <span id="status-refresh">Next refresh in <span id="countdown">60</span>s</span>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Left nav -->
+    <nav id="tab-nav">
+      <button class="tab-btn active" data-panel="current">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Current Bug
+      </button>
+      <button class="tab-btn" data-panel="bugs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        All Bugs
+      </button>
+    </nav>
+
+    <div id="panels">
+
+      <!-- ── Panel: Current Bug ── -->
+      <div class="panel active" id="panel-current">
+        <div class="top-row">
+          <span class="section-title">Current Bug</span>
+          <div class="spacer"></div>
+          <button class="btn btn-primary btn-sm" id="btn-add-bug">+ Add Bug</button>
+          <button class="btn btn-success btn-sm" id="btn-complete">✓ Complete</button>
+          <button class="btn btn-outline btn-sm" id="btn-hold">⏸ Put On Hold</button>
+        </div>
+
+        <!-- Current bug card -->
+        <div class="card" id="current-bug-card" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+          <div id="current-bug-empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+            <span>No bug currently being worked on</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddBugDialog()">+ Add Current Bug</button>
+          </div>
+          <div id="current-bug-details" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+            <div id="current-bug-header">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                  <span id="current-bug-id"></span>
+                  <span id="current-bug-status-badge" class="badge"></span>
+                </div>
+                <div id="current-bug-summary"></div>
+              </div>
+              <a id="current-bug-link" href="#" target="_blank" class="btn btn-outline btn-sm" title="Open in Bugzilla">↗ Open</a>
+            </div>
+            <div class="bug-meta-grid" id="current-bug-meta"></div>
+            <div id="current-bug-body">
+              <div class="bug-section-label">Description</div>
+              <div class="bug-description" id="current-bug-desc"></div>
+              <div class="bug-section-label" id="comments-label" style="display:none;">Comments</div>
+              <div id="current-bug-comments"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- On Hold -->
+        <div class="card" id="hold-panel" style="flex-shrink:0;max-height:220px;display:flex;flex-direction:column;">
+          <div class="card-title">On Hold</div>
+          <div id="hold-list" style="overflow-y:auto;flex:1;">
+            <div class="hold-empty">No bugs on hold</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Panel: All Bugs ── -->
+      <div class="panel" id="panel-bugs">
+        <div class="bugs-toolbar">
+          <span class="section-title" style="margin:0;">All Bugs</span>
+          <div class="spacer"></div>
+          <span style="font-size:11px;color:var(--text-muted);">Columns:</span>
+          <div class="col-toggles" id="col-toggles"></div>
+        </div>
+        <div class="sub-tabs" id="sub-tabs">
+          <button class="sub-tab active" data-tab="assigned">Assigned <span class="count" id="count-assigned">0</span></button>
+          <button class="sub-tab" data-tab="resolved_fixed">Resolved Fixed <span class="count" id="count-resolved_fixed">0</span></button>
+          <button class="sub-tab" data-tab="resolved_implemented">Resolved Implemented <span class="count" id="count-resolved_implemented">0</span></button>
+          <button class="sub-tab" data-tab="all">All Bugs <span class="count" id="count-all">0</span></button>
+        </div>
+        <div class="table-wrap">
+          <table class="bug-table" id="bug-table">
+            <thead id="bug-table-head"></thead>
+            <tbody id="bug-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /panels -->
+  </div><!-- /main -->
+
+</div><!-- /app -->
+
+<!-- Settings Modal -->
+<div id="settings-overlay">
+  <div id="settings-modal">
+    <div class="modal-title">Settings</div>
+    <div class="form-group">
+      <label class="form-label" for="input-url">Bugzilla URL</label>
+      <input class="form-input" id="input-url" type="url" placeholder="https://vmbugzilla.altus.com.br/demandas">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="input-email">User Email</label>
+      <input class="form-input" id="input-email" type="email" placeholder="you@example.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="input-apikey">API Key</label>
+      <input class="form-input" id="input-apikey" type="password" placeholder="Leave unchanged to keep current key">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-primary" id="btn-save-settings">Save &amp; Refresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Bug Dialog -->
+<div id="bug-id-overlay">
+  <div id="bug-id-modal">
+    <div class="modal-title">Set Current Bug</div>
+    <div class="form-group">
+      <label class="form-label" for="input-bug-id">Bug ID</label>
+      <input class="form-input" id="input-bug-id" type="number" placeholder="e.g. 12345" min="1">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeBugIdDialog()">Cancel</button>
+      <button class="btn btn-primary" id="btn-confirm-bug-id">Set Bug</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────
+const state = {
+  data: null,
+  config: null,
+  activeTab: 'assigned',
+  sortCol: null,
+  sortDir: 1,
+  countdown: 60,
+  visibleCols: { Priority: true, Assignee: true, Product: false, Activity: false, 'Sub-Activity': false, Importance: false, Version: false }
+};
+
+const ALL_COLS = ['Priority','Assignee','Product','Activity','Sub-Activity','Importance','Version'];
+const TAB_KEYS = { assigned: 'assigned_bugs', resolved_fixed: 'resolved_fixed_bugs', resolved_implemented: 'resolved_implemented_bugs', all: 'all_bugs' };
+const COL_FIELD = { ID:'id', Summary:'summary', Status:'status', Priority:'priority', Assignee:'assigned_to', Product:'product', Activity:'activity', 'Sub-Activity':'sub_activity', Importance:'importance', Version:'version' };
+
+// ─── API helpers ──────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  const json = await r.json();
+  if (!r.ok) throw new Error(json.error || r.statusText);
+  return json;
+}
+
+// ─── Toast ───────────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ─── Status bar ───────────────────────────────────────────────
+function setStatus(state_, text) {
+  document.getElementById('status-dot').className = state_;
+  document.getElementById('status-text').textContent = text;
+}
+
+// ─── Countdown ───────────────────────────────────────────────
+function startCountdown() {
+  clearInterval(window._cdTimer);
+  state.countdown = 60;
+  document.getElementById('countdown').textContent = 60;
+  window._cdTimer = setInterval(() => {
+    state.countdown--;
+    document.getElementById('countdown').textContent = state.countdown;
+    if (state.countdown <= 0) { state.countdown = 60; doRefresh(); }
+  }, 1000);
+}
+
+// ─── Config ───────────────────────────────────────────────────
+async function loadConfig() {
+  state.config = await api('GET', '/api/config');
+  if (state.config.view_settings) state.visibleCols = { ...state.visibleCols, ...state.config.view_settings };
+  renderColToggles();
+}
+
+function openSettings() {
+  document.getElementById('input-url').value = state.config?.bugzilla_url || '';
+  document.getElementById('input-email').value = state.config?.user_email || '';
+  document.getElementById('input-apikey').value = '';
+  document.getElementById('settings-overlay').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+}
+
+document.getElementById('btn-save-settings').addEventListener('click', async () => {
+  const body = {
+    bugzilla_url: document.getElementById('input-url').value.trim(),
+    user_email: document.getElementById('input-email').value.trim(),
+    view_settings: state.visibleCols
+  };
+  const key = document.getElementById('input-apikey').value.trim();
+  if (key) body.api_key = key;
+  try {
+    await api('POST', '/api/config', body);
+    state.config = { ...state.config, ...body };
+    closeSettings();
+    toast('Settings saved', 'success');
+    doRefresh();
+  } catch(e) { toast(e.message, 'error'); }
+});
+
+// ─── Refresh ─────────────────────────────────────────────────
+async function doRefresh() {
+  setStatus('loading', 'Refreshing…');
+  try {
+    state.data = await api('POST', '/api/refresh');
+    setStatus('active', 'Up to date');
+    renderAll();
+    startCountdown();
+    toast('Bugs refreshed', 'success');
+  } catch(e) {
+    setStatus('error', 'Refresh failed');
+    toast(e.message, 'error');
+    // Still try to load cached data
+    try { state.data = await api('GET', '/api/data'); renderAll(); } catch(_) {}
+  }
+}
+
+async function loadData() {
+  state.data = await api('GET', '/api/data');
+  if (state.data) { setStatus('active', 'Loaded from cache'); renderAll(); }
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function renderAll() {
+  renderCurrentBug();
+  renderHoldList();
+  renderBugTable();
+  renderCounts();
+}
+
+function statusBadgeClass(s) {
+  if (!s) return 'badge-default';
+  s = s.toUpperCase();
+  if (s === 'ASSIGNED') return 'badge-assigned';
+  if (s === 'RESOLVED') return 'badge-resolved';
+  if (s === 'NEW' || s === 'UNCONFIRMED') return 'badge-new';
+  return 'badge-default';
+}
+
+function renderCurrentBug() {
+  const bug = state.data?.current_bug;
+  const empty = document.getElementById('current-bug-empty');
+  const details = document.getElementById('current-bug-details');
+  if (!bug) { empty.style.display = 'flex'; details.style.display = 'none'; return; }
+  empty.style.display = 'none';
+  details.style.display = 'flex';
+
+  document.getElementById('current-bug-id').textContent = `#${bug.id}`;
+  document.getElementById('current-bug-id').className = 'badge badge-assigned';
+
+  const sb = document.getElementById('current-bug-status-badge');
+  sb.textContent = bug.status || '';
+  sb.className = `badge ${statusBadgeClass(bug.status)}`;
+
+  document.getElementById('current-bug-summary').innerHTML = `<div id="current-bug-summary" style="font-size:16px;font-weight:600;color:var(--text-primary);letter-spacing:-0.01em;margin-bottom:12px;line-height:1.4;">${esc(bug.summary || '')}</div>`;
+
+  const baseUrl = (state.config?.bugzilla_url || '').replace(/\/+$/, '');
+  document.getElementById('current-bug-link').href = `${baseUrl}/show_bug.cgi?id=${bug.id}`;
+
+  const meta = [
+    ['Priority', bug.priority], ['Severity', bug.severity], ['Assignee', bug.assigned_to],
+    ['Product', bug.product], ['Activity', bug.activity], ['Sub-Activity', bug.sub_activity],
+    ['Importance', bug.importance], ['Version', bug.version]
+  ];
+  document.getElementById('current-bug-meta').innerHTML = meta.map(([l,v]) => v ? `
+    <div class="bug-meta-item">
+      <div class="bug-meta-label">${l}</div>
+      <div class="bug-meta-value">${esc(v)}</div>
+    </div>` : '').join('');
+
+  document.getElementById('current-bug-desc').textContent = bug.description || 'No description.';
+
+  const comments = bug.comments || [];
+  const cl = document.getElementById('comments-label');
+  cl.style.display = comments.length ? '' : 'none';
+  document.getElementById('current-bug-comments').innerHTML = comments.map(c => `
+    <div class="comment-item">
+      <div class="comment-meta">
+        <span class="comment-author">${esc(c.author||'')}</span>
+        <span>${esc(c.creation_time||'')}</span>
+      </div>
+      <div class="comment-text">${esc(c.text||'')}</div>
+    </div>`).join('');
+}
+
+function renderHoldList() {
+  const list = document.getElementById('hold-list');
+  const bugs = state.data?.on_hold_bugs || [];
+  if (!bugs.length) { list.innerHTML = '<div class="hold-empty">No bugs on hold</div>'; return; }
+  list.innerHTML = bugs.map((b,i) => `
+    <div class="hold-item">
+      <div class="hold-item-info">
+        <div class="hold-item-id">#${b.id}</div>
+        <div class="hold-item-summary">${esc(b.summary||'')}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="removeFromHold(${i})">Make Current</button>
+    </div>`).join('');
+}
+
+function getActiveColumns() {
+  const base = ['ID','Summary','Status'];
+  return base.concat(ALL_COLS.filter(c => state.visibleCols[c]));
+}
+
+function renderBugTable() {
+  const cols = getActiveColumns();
+  const bugs = state.data?.[TAB_KEYS[state.activeTab]] || [];
+
+  // Sort
+  let sorted = [...bugs];
+  if (state.sortCol) {
+    const field = COL_FIELD[state.sortCol] || state.sortCol.toLowerCase();
+    sorted.sort((a,b) => {
+      const av = String(a[field]||''), bv = String(b[field]||'');
+      return av.localeCompare(bv) * state.sortDir;
+    });
+  }
+
+  // Head
+  const thead = document.getElementById('bug-table-head');
+  thead.innerHTML = `<tr>${cols.map(c => {
+    const cls = state.sortCol === c ? (state.sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
+    return `<th class="${cls}" data-col="${c}">${c}</th>`;
+  }).join('')}</tr>`;
+  thead.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+    if (state.sortCol === th.dataset.col) state.sortDir *= -1;
+    else { state.sortCol = th.dataset.col; state.sortDir = 1; }
+    renderBugTable();
+  }));
+
+  // Body
+  const baseUrl = (state.config?.bugzilla_url || '').replace(/\/+$/, '');
+  document.getElementById('bug-table-body').innerHTML = sorted.map(bug => `
+    <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}">
+      ${cols.map(c => {
+        if (c === 'ID') return `<td>${bug.id}</td>`;
+        if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary||'')}</div></td>`;
+        if (c === 'Status') return `<td><span class="badge ${statusBadgeClass(bug.status)}">${esc(bug.status||'')}</span></td>`;
+        const field = COL_FIELD[c] || c.toLowerCase();
+        return `<td><div class="cell-truncate">${esc(bug[field]||'')}</div></td>`;
+      }).join('')}
+    </tr>`).join('');
+
+  document.querySelectorAll('#bug-table-body tr').forEach(tr => {
+    tr.addEventListener('dblclick', () => window.open(tr.dataset.url, '_blank'));
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter') window.open(tr.dataset.url, '_blank'); });
+    tr.setAttribute('tabindex', '0');
+  });
+}
+
+function renderCounts() {
+  if (!state.data) return;
+  document.getElementById('count-assigned').textContent = (state.data.assigned_bugs||[]).length;
+  document.getElementById('count-resolved_fixed').textContent = (state.data.resolved_fixed_bugs||[]).length;
+  document.getElementById('count-resolved_implemented').textContent = (state.data.resolved_implemented_bugs||[]).length;
+  document.getElementById('count-all').textContent = (state.data.all_bugs||[]).length;
+}
+
+function renderColToggles() {
+  const c = document.getElementById('col-toggles');
+  c.innerHTML = ALL_COLS.map(col => `
+    <button class="col-toggle ${state.visibleCols[col] ? 'on' : ''}" data-col="${col}">${col}</button>
+  `).join('');
+  c.querySelectorAll('.col-toggle').forEach(btn => btn.addEventListener('click', () => {
+    const col = btn.dataset.col;
+    state.visibleCols[col] = !state.visibleCols[col];
+    btn.classList.toggle('on', state.visibleCols[col]);
+    renderBugTable();
+    api('POST', '/api/config', { view_settings: state.visibleCols });
+  }));
+}
+
+// ─── Actions ─────────────────────────────────────────────────
+function openAddBugDialog() {
+  document.getElementById('input-bug-id').value = '';
+  document.getElementById('bug-id-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('input-bug-id').focus(), 50);
+}
+
+function closeBugIdDialog() {
+  document.getElementById('bug-id-overlay').classList.remove('open');
+}
+
+document.getElementById('btn-confirm-bug-id').addEventListener('click', async () => {
+  const id = document.getElementById('input-bug-id').value.trim();
+  if (!id) return;
+  closeBugIdDialog();
+  setStatus('loading', `Fetching bug #${id}…`);
+  try {
+    const bug = await api('POST', '/api/current-bug', { bug_id: id });
+    state.data = state.data || {};
+    state.data.current_bug = bug;
+    renderCurrentBug();
+    setStatus('active', 'Up to date');
+    toast(`Bug #${id} set as current`, 'success');
+  } catch(e) { setStatus('error', e.message); toast(e.message, 'error'); }
+});
+
+document.getElementById('input-bug-id').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-confirm-bug-id').click();
+});
+
+document.getElementById('btn-add-bug').addEventListener('click', openAddBugDialog);
+
+document.getElementById('btn-complete').addEventListener('click', async () => {
+  if (!state.data?.current_bug) { toast('No current bug', 'error'); return; }
+  if (!confirm(`Complete bug #${state.data.current_bug.id}?`)) return;
+  try {
+    await api('DELETE', '/api/current-bug');
+    state.data.current_bug = null;
+    renderCurrentBug();
+    toast('Bug completed', 'success');
+  } catch(e) { toast(e.message, 'error'); }
+});
+
+document.getElementById('btn-hold').addEventListener('click', async () => {
+  if (!state.data?.current_bug) { toast('No current bug to hold', 'error'); return; }
+  try {
+    await api('POST', '/api/hold');
+    const bug = state.data.current_bug;
+    state.data.on_hold_bugs = state.data.on_hold_bugs || [];
+    state.data.on_hold_bugs.push(bug);
+    state.data.current_bug = null;
+    renderCurrentBug();
+    renderHoldList();
+    toast(`Bug #${bug.id} put on hold`, 'info');
+  } catch(e) { toast(e.message, 'error'); }
+});
+
+async function removeFromHold(index) {
+  if (state.data?.current_bug) {
+    if (!confirm('Replace current bug with this one?')) return;
+  }
+  try {
+    const bug = await api('DELETE', `/api/hold/${index}`);
+    state.data.current_bug = bug;
+    state.data.on_hold_bugs.splice(index, 1);
+    renderCurrentBug();
+    renderHoldList();
+    toast(`Bug #${bug.id} is now current`, 'success');
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ─── Tab switching ───────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(`panel-${btn.dataset.panel}`).classList.add('active');
+}));
+
+document.querySelectorAll('.sub-tab').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.activeTab = btn.dataset.tab;
+  state.sortCol = null;
+  renderBugTable();
+}));
+
+// ─── Header buttons ───────────────────────────────────────────
+document.getElementById('btn-refresh').addEventListener('click', doRefresh);
+document.getElementById('btn-settings').addEventListener('click', openSettings);
+
+// Close modals on overlay click
+document.getElementById('settings-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+document.getElementById('bug-id-overlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeBugIdDialog(); });
+
+// ─── Utils ───────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+(async () => {
+  try {
+    await loadConfig();
+    await loadData();
+    renderColToggles();
+    startCountdown();
+    if (state.config?.api_key && !state.config.api_key.startsWith('••••')) {
+      doRefresh();
+    } else if (state.data?.last_update) {
+      setStatus('active', `Cached: ${state.data.last_update.slice(0,16).replace('T',' ')}`);
+    } else {
+      setStatus('error', 'Not configured — open Settings');
+      openSettings();
+    }
+  } catch(e) {
+    setStatus('error', 'Failed to load');
+    toast(e.message, 'error');
+  }
+})();
+</script>
+</body>
+</html>
