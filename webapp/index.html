@@ -46,6 +46,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
         All Bugs
       </button>
+      <button class="tab-btn" data-panel="commit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Commit Prompt
+      </button>
     </nav>
 
     <div id="panels">
@@ -95,6 +99,16 @@
             <div class="hold-empty">No bugs on hold</div>
           </div>
         </div>
+
+        <!-- ── Commit Prompt (inline, collapsible) ── -->
+        <details class="card commit-collapsible" id="commit-inline-section">
+          <summary class="commit-summary-toggle">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Commit Prompt
+            <span class="commit-toggle-hint">click to expand</span>
+          </summary>
+          <div class="commit-form-body" id="commit-form-inline"></div>
+        </details>
       </div>
 
       <!-- ── Panel: All Bugs ── -->
@@ -116,6 +130,18 @@
             <thead id="bug-table-head"></thead>
             <tbody id="bug-table-body"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- ── Panel: Commit Prompt ── -->
+      <div class="panel" id="panel-commit">
+        <div class="top-row" style="flex-shrink:0;">
+          <span class="section-title">Commit Prompt</span>
+          <div class="spacer"></div>
+          <button class="btn btn-outline btn-sm" onclick="autoFillBug()">↺ Fill from current bug</button>
+        </div>
+        <div class="commit-tab-scroll">
+          <div class="commit-form-body" id="commit-form-tab"></div>
         </div>
       </div>
 
@@ -161,6 +187,26 @@
     </div>
   </div>
 </div>
+
+<!-- Manage Dropdown Modal (branches / repos) -->
+<div id="manage-dropdown-overlay" onclick="if(event.target===this)closeManageDropdown()">
+  <div id="manage-dropdown-modal">
+    <div class="modal-title" id="manage-dropdown-title">Manage</div>
+    <div id="manage-dropdown-list" class="manage-list"></div>
+    <div class="form-group" style="margin-top:12px;display:flex;gap:8px;">
+      <input class="form-input" id="manage-dropdown-input" placeholder="New value…" style="flex:1;">
+      <input class="form-input" id="manage-dropdown-default" placeholder="(optional) set as default?" style="display:none;">
+    </div>
+    <div class="manage-hint" id="manage-default-hint"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeManageDropdown()">Done</button>
+      <button class="btn btn-primary" onclick="addManageDropdownItem()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shared file history datalist -->
+<datalist id="file-history-datalist"></datalist>
 
 <!-- Toast container -->
 <div id="toast-container"></div>
@@ -276,7 +322,49 @@ async function loadData() {
 }
 
 // ─── Render ───────────────────────────────────────────────────
+function purgeNonAssignedPrios() {
+  const assigned = state.data?.assigned_bugs || [];
+  const assignedIds = new Set(assigned.map(b => String(b.id)));
+  let prios    = getLocalPrios();
+  let subPrios = getLocalSubPrios();
+  let changed  = false;
+  Object.keys(prios).forEach(id => {
+    if (!assignedIds.has(id)) { delete prios[id]; changed = true; }
+  });
+  Object.keys(subPrios).forEach(id => {
+    if (!assignedIds.has(id)) { delete subPrios[id]; changed = true; }
+  });
+  if (changed) {
+    localStorage.setItem(LS_PRIO,     JSON.stringify(prios));
+    localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+  }
+}
+
+function autoAssignSubPrios() {
+  const assigned = state.data?.assigned_bugs || [];
+  if (!assigned.length) return;
+  const subPrios = getLocalSubPrios();
+  // Separate bugs that already have a rank from new ones
+  const ranked   = assigned.filter(b => subPrios[String(b.id)] !== undefined && subPrios[String(b.id)] !== null);
+  const unranked = assigned.filter(b => subPrios[String(b.id)] === undefined  || subPrios[String(b.id)] === null);
+  if (!unranked.length) return;
+  const maxRank  = ranked.length ? Math.max(...ranked.map(b => subPrios[String(b.id)])) : 0;
+  unranked.forEach((b, i) => { subPrios[String(b.id)] = maxRank + i + 1; });
+  localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+}
+
+function normaliseSubPrios() {
+  // Compact ranks to 1..N with no gaps, preserving relative order
+  const subPrios = getLocalSubPrios();
+  const entries  = Object.entries(subPrios).sort((a,b) => a[1]-b[1]);
+  entries.forEach(([id], i) => { subPrios[id] = i + 1; });
+  localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+}
+
 function renderAll() {
+  purgeNonAssignedPrios();
+  autoAssignSubPrios();
+  normaliseSubPrios();
   renderCurrentBug();
   renderHoldList();
   renderBugTable();
@@ -357,27 +445,109 @@ function getActiveColumns() {
   return base.concat(ALL_COLS.filter(c => state.visibleCols[c]));
 }
 
+// ─── Local Bug Priority ───────────────────────────────────────
+const LS_PRIO = 'bz_local_prio';
+const LS_SUB_PRIO = 'bz_local_sub_prio';
+const PRIO_CYCLE  = [null, 'high', 'medium', 'low'];
+const PRIO_LABEL  = { high: '🔴 High', medium: '🟡 Medium', low: '🟢 Low' };
+const PRIO_ORDER  = { high: 0, medium: 1, low: 2 };
+
+function getLocalPrios() {
+  try { return JSON.parse(localStorage.getItem(LS_PRIO)) || {}; } catch(e) { return {}; }
+}
+function setLocalPrio(bugId, prio) {
+  const p = getLocalPrios();
+  if (prio === null) delete p[String(bugId)]; else p[String(bugId)] = prio;
+  localStorage.setItem(LS_PRIO, JSON.stringify(p));
+}
+function cycleLocalPrio(bugId) {
+  const p = getLocalPrios();
+  const cur = p[String(bugId)] || null;
+  const next = PRIO_CYCLE[(PRIO_CYCLE.indexOf(cur) + 1) % PRIO_CYCLE.length];
+  setLocalPrio(bugId, next);
+  renderBugTable();
+}
+function getLocalSubPrios() {
+  try { return JSON.parse(localStorage.getItem(LS_SUB_PRIO)) || {}; } catch(e) { return {}; }
+}
+function setLocalSubPrio(bugId, val) {
+  const p = getLocalSubPrios();
+  if (val === null) delete p[String(bugId)]; else p[String(bugId)] = val;
+  localStorage.setItem(LS_SUB_PRIO, JSON.stringify(p));
+}
+function moveSubPrio(bugId, dir) {
+  // dir: -1 = move up (lower number), +1 = move down (higher number)
+  const subPrios  = getLocalSubPrios();
+  const myRank    = subPrios[String(bugId)];
+  if (myRank === undefined) return;
+  const targetRank = myRank + dir;
+  const swapId     = Object.keys(subPrios).find(id => subPrios[id] === targetRank);
+  if (!swapId) return; // already at boundary
+  subPrios[String(bugId)] = targetRank;
+  subPrios[swapId]        = myRank;
+  localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+  renderBugTable();
+}
+function prioBadgeHTML(bugId, isAssigned) {
+  const p  = getLocalPrios()[String(bugId)];
+  const b1 = !p ? `<span class="lp-badge lp-none" onclick="event.stopPropagation();cycleLocalPrio(${bugId})" title="Click to set priority">—</span>`
+                : `<span class="lp-badge lp-${p}" onclick="event.stopPropagation();cycleLocalPrio(${bugId})" title="Click to change priority">${PRIO_LABEL[p]}</span>`;
+  if (!isAssigned) return `<div class="lp-cell-wrap">${b1}</div>`;
+  const sp      = getLocalSubPrios()[String(bugId)] ?? '?';
+  const total   = (state.data?.assigned_bugs||[]).length;
+  const atTop   = sp === 1;
+  const atBot   = sp === total;
+  const b2 = `<div class="sp-rank" onclick="event.stopPropagation()">
+    <button class="sp-arrow${atTop?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},-1)" title="Move up" ${atTop?'disabled':''}>▲</button>
+    <span class="lp-sub-badge lp-num">${sp}</span>
+    <button class="sp-arrow${atBot?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},1)" title="Move down" ${atBot?'disabled':''}>▼</button>
+  </div>`;
+  return `<div class="lp-cell-wrap">${b1}${b2}</div>`;
+}
+function prioSortVal(bugId) {
+  const p = getLocalPrios()[String(bugId)];
+  return p ? PRIO_ORDER[p] : 99;
+}
+function subPrioSortVal(bugId) {
+  const sp = getLocalSubPrios()[String(bugId)];
+  return (sp !== undefined && sp !== null) ? sp : 999999;
+}
+
 function renderBugTable() {
   const cols = getActiveColumns();
   const bugs = state.data?.[TAB_KEYS[state.activeTab]] || [];
 
-  // Sort
+  // Sort: assigned tab always sorts by local priority first
   let sorted = [...bugs];
+  const isAssigned = state.activeTab === 'assigned';
   if (state.sortCol) {
     const field = COL_FIELD[state.sortCol] || state.sortCol.toLowerCase();
     sorted.sort((a,b) => {
+      if (isAssigned) {
+        const pd = prioSortVal(a.id) - prioSortVal(b.id);
+        if (pd !== 0) return pd;
+        const spd = subPrioSortVal(a.id) - subPrioSortVal(b.id);
+        if (spd !== 0) return spd;
+      }
       const av = String(a[field]||''), bv = String(b[field]||'');
       return av.localeCompare(bv) * state.sortDir;
     });
+  } else if (isAssigned) {
+    sorted.sort((a,b) => {
+      const pd = prioSortVal(a.id) - prioSortVal(b.id);
+      if (pd !== 0) return pd;
+      return subPrioSortVal(a.id) - subPrioSortVal(b.id);
+    });
   }
 
-  // Head
+  // Head — ★ column always first
   const thead = document.getElementById('bug-table-head');
-  thead.innerHTML = `<tr>${cols.map(c => {
+  const pHead = `<th class="lp-th" title="My Priority (click cells to set)">★ Prio</th>`;
+  thead.innerHTML = `<tr>${pHead}${cols.map(c => {
     const cls = state.sortCol === c ? (state.sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     return `<th class="${cls}" data-col="${c}">${c}</th>`;
   }).join('')}</tr>`;
-  thead.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+  thead.querySelectorAll('th[data-col]').forEach(th => th.addEventListener('click', () => {
     if (state.sortCol === th.dataset.col) state.sortDir *= -1;
     else { state.sortCol = th.dataset.col; state.sortDir = 1; }
     renderBugTable();
@@ -387,6 +557,7 @@ function renderBugTable() {
   const baseUrl = (state.config?.bugzilla_url || '').replace(/\/+$/, '');
   document.getElementById('bug-table-body').innerHTML = sorted.map(bug => `
     <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}">
+      <td class="lp-cell">${prioBadgeHTML(bug.id, isAssigned)}</td>
       ${cols.map(c => {
         if (c === 'ID') return `<td>${bug.id}</td>`;
         if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary||'')}</div></td>`;
@@ -459,12 +630,25 @@ document.getElementById('btn-add-bug').addEventListener('click', openAddBugDialo
 
 document.getElementById('btn-complete').addEventListener('click', async () => {
   if (!state.data?.current_bug) { toast('No current bug', 'error'); return; }
-  if (!confirm(`Complete bug #${state.data.current_bug.id}?`)) return;
+  const completedId = state.data.current_bug.id;
+  if (!confirm(`Complete bug #${completedId}?`)) return;
   try {
+    // Shift sub-priorities: remove completed, decrement remaining by 1
+    const subPrios = getLocalSubPrios();
+    const completedSP = subPrios[String(completedId)];
+    if (completedSP !== undefined && completedSP !== null) {
+      delete subPrios[String(completedId)];
+      // Decrement all bugs with sub-prio > completed's sub-prio
+      Object.keys(subPrios).forEach(id => {
+        if (subPrios[id] > completedSP) subPrios[id] -= 1;
+      });
+      localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+    }
     await api('DELETE', '/api/current-bug');
     state.data.current_bug = null;
     renderCurrentBug();
-    toast('Bug completed', 'success');
+    renderBugTable();
+    toast('Bug completed — sub-priorities updated', 'success');
   } catch(e) { toast(e.message, 'error'); }
 });
 
@@ -531,6 +715,7 @@ function esc(s) {
     await loadConfig();
     await loadData();
     renderColToggles();
+    initCommitSystem();
     startCountdown();
     if (state.config?.api_key && !state.config.api_key.startsWith('••••')) {
       doRefresh();
@@ -545,6 +730,326 @@ function esc(s) {
     toast(e.message, 'error');
   }
 })();
+
+// ═══════════════════════════════════════════════════════
+// COMMIT PROMPT SYSTEM
+// ═══════════════════════════════════════════════════════
+
+const LS_CS  = 'bz_commit_state';
+const LS_BR  = 'bz_branches';
+const LS_RE  = 'bz_repos';
+const LS_FH  = 'bz_file_hist';
+const DEF_BRANCH = 'v1.14.x.x/develop';
+const DEF_REPO   = 'linux-multi-target';
+
+let cs = { bugName:'', bugLink:'', bugDesc:'', files:[{file:'',desc:''}], repo:DEF_REPO, branch:DEF_BRANCH, hash:'', notes:'' };
+
+function loadCS() {
+  try { const s = localStorage.getItem(LS_CS); if (s) cs = {...cs, ...JSON.parse(s)}; } catch(e){}
+  if (!cs.files?.length) cs.files = [{file:'',desc:''}];
+}
+function saveCS() { localStorage.setItem(LS_CS, JSON.stringify(cs)); }
+
+function getBranchesKey(repo) { return `bz_branches_${(repo||'default').replace(/[^a-zA-Z0-9_]/g,'_')}`; }
+function getBranches(repo)    { const k = getBranchesKey(repo||cs.repo); try { return JSON.parse(localStorage.getItem(k)) || [DEF_BRANCH]; } catch(e){ return [DEF_BRANCH]; } }
+function saveBranches(a,repo) { localStorage.setItem(getBranchesKey(repo||cs.repo), JSON.stringify(a)); }
+function getRepos()    { try { return JSON.parse(localStorage.getItem(LS_RE)) || [DEF_REPO]; } catch(e){ return [DEF_REPO]; } }
+function saveRepos(a)  { localStorage.setItem(LS_RE, JSON.stringify(a)); }
+function getDefBranch(repo){ return localStorage.getItem(`bz_def_branch_${(repo||cs.repo).replace(/[^a-zA-Z0-9_]/g,'_')}`) || DEF_BRANCH; }
+function setDefBranch(v,repo){ localStorage.setItem(`bz_def_branch_${(repo||cs.repo).replace(/[^a-zA-Z0-9_]/g,'_')}`, v); }
+function getDefRepo()  { return localStorage.getItem('bz_def_repo') || DEF_REPO; }
+function setDefRepo(v) { localStorage.setItem('bz_def_repo', v); }
+function getFileHist() { try { return JSON.parse(localStorage.getItem(LS_FH)) || []; } catch(e){ return []; } }
+function addToFileHist(f) {
+  if (!f.trim()) return;
+  let h = getFileHist().filter(x => x !== f);
+  h.unshift(f); if (h.length > 80) h = h.slice(0,80);
+  localStorage.setItem(LS_FH, JSON.stringify(h));
+}
+
+function buildFormHTML(formId) {
+  const bOpts = getBranches(cs.repo).map(b => `<option value="${esc(b)}"${b===cs.branch?' selected':''}>${esc(b)}</option>`).join('');
+  const rOpts = getRepos().map(r => `<option value="${esc(r)}"${r===cs.repo?' selected':''}>${esc(r)}</option>`).join('');
+  const rowsHTML = cs.files.map((f,i) => `
+    <div class="file-row">
+      <input type="text" class="form-input" list="file-history-datalist" value="${esc(f.file)}"
+        placeholder="path/to/file.c" oninput="updateFileRow(${i},'file',this.value)">
+      <input type="text" class="form-input" value="${esc(f.desc)}"
+        placeholder="What changed in this file" oninput="updateFileRow(${i},'desc',this.value)">
+      <button class="btn btn-ghost btn-icon btn-sm file-rm" onclick="removeFileRow(${i})"
+        title="Remove" ${cs.files.length===1?'disabled':''}>✕</button>
+    </div>`).join('');
+
+  return `
+    <div class="cg2">
+      <div class="form-group">
+        <label class="form-label">Bug Name <span class="auto-badge">auto</span></label>
+        <input type="text" class="form-input" value="${esc(cs.bugName)}"
+          placeholder="Bug XXXXX - Summary" oninput="updateCS('bugName',this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bug Link</label>
+        <input type="text" class="form-input" value="${esc(cs.bugLink)}"
+          placeholder="https://…" oninput="updateCS('bugLink',this.value)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bug Description / Comments <span class="auto-badge">auto</span></label>
+      <textarea class="form-input commit-ta" rows="5"
+        placeholder="Comments from the bug…"
+        oninput="updateCS('bugDesc',this.value)">${esc(cs.bugDesc)}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="fgh"><label class="form-label" style="margin:0">Files Changed</label>
+        <button class="btn btn-outline btn-sm" onclick="addFileRow()">+ Add Row</button></div>
+      <div class="file-rows-head"><span>File path</span><span>Description of change</span><span></span></div>
+      <div id="file-rows-${formId}">${rowsHTML}</div>
+    </div>
+    <div class="cg2">
+      <div class="form-group">
+        <div class="fgh"><label class="form-label" style="margin:0">Repository</label>
+          <button class="btn btn-ghost btn-sm" onclick="openManageDrop('repo')">✎ Manage</button></div>
+        <select class="form-input" onchange="updateCS('repo',this.value);cs.branch=getDefBranch(this.value);saveCS();renderCommitForms()">${rOpts}</select>
+      </div>
+      <div class="form-group">
+        <div class="fgh"><label class="form-label" style="margin:0">Branch</label>
+          <button class="btn btn-ghost btn-sm" onclick="openManageDrop('branch')">✎ Manage</button></div>
+        <select class="form-input" onchange="updateCS('branch',this.value)">${bOpts}</select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Commit Hash(es) <span style="color:var(--text-muted);font-weight:400">(fill after committing)</span></label>
+      <input type="text" class="form-input" value="${esc(cs.hash||'')}"
+        placeholder="e.g. a1b2c3d  or  a1b2c3d e4f5a6b" oninput="updateCS('hash',this.value)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+      <textarea class="form-input commit-ta" rows="2"
+        placeholder="Additional notes…"
+        oninput="updateCS('notes',this.value)">${esc(cs.notes)}</textarea>
+    </div>
+    <div class="form-group">
+      <div class="fgh" style="flex-wrap:wrap;gap:8px;">
+        <label class="form-label" style="margin:0">Generated Prompt</label>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="copyPrompt()">📋 Copy Prompt</button>
+          <button class="btn btn-primary btn-sm" onclick="copyAndGPT()">🤖 Copy &amp; Go to GPT</button>
+        </div>
+      </div>
+      <pre class="commit-out" id="prompt-out-${formId}"></pre>
+    </div>`;
+}
+
+function renderCommitForms() {
+  const i = document.getElementById('commit-form-inline');
+  const t = document.getElementById('commit-form-tab');
+  if (i) i.innerHTML = buildFormHTML('inline');
+  if (t) t.innerHTML = buildFormHTML('tab');
+  // update datalist
+  const dl = document.getElementById('file-history-datalist');
+  if (dl) dl.innerHTML = getFileHist().map(f=>`<option value="${esc(f)}">`).join('');
+  updatePromptOutputs();
+}
+
+function updateCS(field, value) { cs[field]=value; saveCS(); updatePromptOutputs(); }
+
+function updateFileRow(idx, prop, value) {
+  if (!cs.files[idx]) return;
+  cs.files[idx][prop] = value;
+  if (prop==='file' && value.trim()) addToFileHist(value.trim());
+  saveCS(); updatePromptOutputs();
+}
+
+function addFileRow()         { cs.files.push({file:'',desc:''}); saveCS(); renderCommitForms(); }
+function removeFileRow(idx)   { if (cs.files.length<=1) return; cs.files.splice(idx,1); saveCS(); renderCommitForms(); }
+
+function updatePromptOutputs() {
+  const p = buildPrompt();
+  document.querySelectorAll('.commit-out').forEach(el => el.textContent = p);
+}
+
+function buildPrompt() {
+  const files   = cs.files.filter(f=>f.file||f.desc);
+  const filesStr   = files.length ? files.map(f=>`- ${f.file}`).join('\n') : '{PLACEHOLDER}';
+  const changesStr = files.length ? files.map(f=>`- [${f.file}] ${f.desc}`).join('\n') : '{PLACEHOLDER}';
+  const sep = '-----------------------------------------------------------------------';
+  return `TASK:
+Generate commit messages FIRST.
+Generate Bugzilla message ONLY after hashes are provided.
+
+Language: English only
+Be precise and deterministic.
+
+--------------------------------
+PHASE 1 — COMMIT MESSAGES
+
+Generate one or more commit messages.
+
+FORMAT (STRICT):
+
+<type>: <description>
+
+<body>
+
+Files:
+- <file1>
+- <file2>
+
+Refs: <name>
+
+RULES:
+- type: choose ONE (feat | fix | refactor | build | style | chore | docs | test | ci | sync | merge | revert)
+- description: lowercase, imperative, no final period
+- body: explain WHAT, WHY, HOW (paragraphs with blank lines)
+- files: concise list
+- always include Refs
+
+Split commits if multiple logical changes exist.
+
+OUTPUT:
+
+[Commit Message 1]
+<text>
+
+[Commit Message 2] (if needed)
+<text>
+
+DO NOT generate Bugzilla message in this phase.
+
+--------------------------------
+PHASE 2 — BUGZILLA MESSAGE (ONLY AFTER HASHES PROVIDED)
+
+When hashes are given, generate Bugzilla message.
+
+STRUCTURE:
+
+1. Issue summary
+2. Root cause
+3. Implemented solution
+
+Then append ONE block per commit:
+
+${sep}
+							Git Tracking
+${sep}
+Repository:	${cs.repo||'{PLACEHOLDER}'}
+Branch:		${cs.branch||'{PLACEHOLDER}'}
+Hash:		${cs.hash||'{provided later}'}
+${sep}
+<ordinal> change
+
+Repeat for each commit (1st change, 2nd change, ...)
+
+Finish with:
+Changed to RESOLVED IMPLEMENTED.
+
+OUTPUT:
+
+[Bugzilla Message]
+<text>
+
+--------------------------------
+INPUT DATA
+
+Bug name: ${cs.bugName||'{PLACEHOLDER}'}
+Bug link: ${cs.bugLink||'{PLACEHOLDER}'}
+Bug description: ${cs.bugDesc||'{PLACEHOLDER}'}
+Changes made:
+${changesStr}
+Files changed:
+${filesStr}
+Repository: ${cs.repo||'{PLACEHOLDER}'}
+Branch: ${cs.branch||'{PLACEHOLDER}'}
+Hashes: ${cs.hash||'{provided later}'}
+Notes: ${cs.notes||'(none)'}`;
+}
+
+function autoFillBug() {
+  const bug = state.data?.current_bug;
+  if (!bug) { toast('No current bug loaded','error'); return; }
+  cs.bugName = `Bug ${bug.id} - ${bug.summary||''}`;
+  const comments = bug.comments||[];
+  cs.bugDesc = comments.length
+    ? comments.map(c=>`--- ${c.author||'?'} (${(c.creation_time||'').slice(0,10)}) ---\n${(c.text||'').trim()}`).join('\n\n')
+    : (bug.description||'');
+  const base = (state.config?.bugzilla_url||'').replace(/\/+$/,'');
+  cs.bugLink = `${base}/show_bug.cgi?id=${bug.id}`;
+  saveCS(); renderCommitForms();
+  toast(`Filled from Bug #${bug.id}`,'success');
+}
+
+async function copyPrompt() {
+  try { await navigator.clipboard.writeText(buildPrompt()); toast('Copied!','success'); }
+  catch(e){ toast('Copy failed','error'); }
+}
+async function copyAndGPT() {
+  try { await navigator.clipboard.writeText(buildPrompt()); } catch(e){}
+  window.open('https://chatgpt.com','_blank');
+  toast('Copied — opening ChatGPT','success');
+}
+
+// ─── Manage dropdown modal ────────────────────────────────
+let _mType = 'branch';
+function openManageDrop(type) {
+  _mType = type;
+  document.getElementById('manage-dropdown-title').textContent = type==='branch'?'Manage Branches':'Manage Repositories';
+  document.getElementById('manage-dropdown-input').value='';
+  document.getElementById('manage-dropdown-input').placeholder = type==='branch'?'e.g. v1.15.x.x/develop':'e.g. linux-arm';
+  renderManageList();
+  document.getElementById('manage-dropdown-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('manage-dropdown-input').focus(),60);
+}
+function closeManageDropdown() {
+  document.getElementById('manage-dropdown-overlay').classList.remove('open');
+  renderCommitForms();
+}
+function renderManageList() {
+  const items = _mType==='branch'?getBranches(cs.repo):getRepos();
+  const def   = _mType==='branch'?getDefBranch(cs.repo):getDefRepo();
+  document.getElementById('manage-dropdown-list').innerHTML = items.length
+    ? items.map((v,i)=>`
+      <div class="manage-item">
+        <span class="manage-item-label">${esc(v)}</span>
+        <div class="manage-item-actions">
+          ${v===def?'<span class="default-badge">default</span>':`<button class="btn btn-ghost btn-sm" onclick="setManageDef('${esc(v)}')">Set default</button>`}
+          <button class="btn btn-ghost btn-sm btn-icon" onclick="removeManageItem(${i})" title="Remove">✕</button>
+        </div>
+      </div>`).join('')
+    : '<div class="hold-empty">No items</div>';
+}
+function addManageDropdownItem() {
+  const v = document.getElementById('manage-dropdown-input').value.trim();
+  if (!v) return;
+  const items = _mType==='branch'?getBranches(cs.repo):getRepos();
+  if (items.includes(v)){toast('Already exists','error');return;}
+  items.push(v);
+  _mType==='branch'?saveBranches(items,cs.repo):saveRepos(items);
+  document.getElementById('manage-dropdown-input').value='';
+  renderManageList();
+}
+function removeManageItem(idx) {
+  const items = _mType==='branch'?getBranches(cs.repo):getRepos();
+  const removed = items.splice(idx,1)[0];
+  _mType==='branch'?saveBranches(items,cs.repo):saveRepos(items);
+  const def = _mType==='branch'?getDefBranch(cs.repo):getDefRepo();
+  if (def===removed){ _mType==='branch'?setDefBranch(items[0]||'',cs.repo):setDefRepo(items[0]||''); }
+  renderManageList();
+}
+function setManageDef(v) {
+  _mType==='branch'?setDefBranch(v,cs.repo):setDefRepo(v);
+  if (_mType==='branch') cs.branch=v; else cs.repo=v;
+  saveCS(); renderManageList();
+}
+
+function initCommitSystem() {
+  loadCS();
+  if (!cs.repo)   cs.repo   = getDefRepo();
+  if (!cs.branch) cs.branch = getDefBranch(cs.repo);
+  renderCommitForms();
+  document.getElementById('manage-dropdown-input').addEventListener('keydown', e=>{
+    if(e.key==='Enter') addManageDropdownItem();
+  });
+}
 </script>
 </body>
 </html>
