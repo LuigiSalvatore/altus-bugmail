@@ -1,6 +1,6 @@
 # Bugzilla Bug Tracker
 
-A Windows desktop GUI application for tracking Bugzilla bugs with real-time updates and persistent data storage.
+A Flask-based web app for tracking Bugzilla bugs — with real-time updates, commit prompt generation, and optional PWA install + silent Windows startup.
 
 ## Features
 
@@ -124,10 +124,11 @@ The application stores two files in the same directory:
 
 ## Technical Details
 
-- **GUI Framework**: Tkinter (built into Python)
-- **HTTP Client**: Requests library
+- **Backend**: Flask (`server.py`) serving a single-page HTML app
+- **Frontend**: Vanilla HTML/CSS/JS in `webapp/`
+- **HTTP Client**: Requests library (via `apiBugzilla.py`)
 - **Data Format**: JSON for configuration and persistent storage
-- **Update Interval**: 60 seconds (1 minute)
+- **Update Interval**: 60 seconds (auto-refresh)
 - **API**: Bugzilla REST API
 
 ## Security Notes
@@ -136,3 +137,59 @@ The application stores two files in the same directory:
 - Keep this file secure and do not share it
 - The API key is displayed as asterisks in the configuration dialog
 - All API requests use HTTPS for secure communication
+
+---
+
+## PWA — Install as a Desktop App
+
+The app ships as a Progressive Web App. Chrome (and Edge) can install it as a standalone window with no browser chrome — feels like a native app.
+
+### Requirements
+
+- Google Chrome or Microsoft Edge
+- Server running at `http://localhost:5000`
+
+### How to Install
+
+1. Start the server: `python server.py`
+2. Open Chrome → `http://localhost:5000`
+3. Look for the **⊕ Install** icon in the address bar (right side)
+4. Click it → **Install App**
+5. The app opens in its own window and a shortcut is added to your Desktop / Start Menu
+
+> **Note**: `localhost` is treated as a secure origin by Chrome, so no HTTPS certificate is needed.
+
+### Offline Shell
+
+The service worker (`webapp/sw.js`) caches the app shell (`index.html`, `style.css`, icons). If the server is down, the shell still loads — you'll see cached UI until the server comes back.
+
+---
+
+## Silent Windows Startup
+
+Run the tracker silently on Windows login — no console window, no manual start.
+
+### One-time Setup
+
+Double-click **`install_startup.bat`** (no admin required).
+
+This registers a Task Scheduler job (`BugzillaTracker`) that:
+- Runs at every user logon
+- Launches `launch.vbs` via `wscript.exe` (zero visible windows)
+- Starts `server.py` with `pythonw.exe` (no console)
+
+### Verify
+
+```
+Task Scheduler → Task Scheduler Library → BugzillaTracker
+```
+
+Or run: `schtasks /query /tn BugzillaTracker`
+
+### Remove Startup Task
+
+Double-click **`uninstall_startup.bat`** to remove the task.
+
+### Single-Instance Guard
+
+`server.py` binds a sentinel socket on port `5001` at startup. If a second instance tries to start (e.g. you log in twice), it detects port `5001` is already held and exits silently — no duplicate servers.

@@ -1,4 +1,6 @@
 import os
+import sys
+import socket
 import json
 import threading
 import time
@@ -337,6 +339,15 @@ def remove_from_hold(index):
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    # Single-instance guard: bind a sentinel socket so only one server runs.
+    _guard = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _guard.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 0)
+    try:
+        _guard.bind(('127.0.0.1', 5001))
+    except OSError:
+        # Port already held by a running instance — exit silently.
+        sys.exit(0)
+
     print('Starting Bugzilla Tracker server at http://localhost:5000')
     # Open browser after brief delay
     def open_browser():
