@@ -29,7 +29,8 @@ class BugzillaTracker:
             'Activity': False,
             'Sub-Activity': False,
             'Importance': False,
-            'Version': False
+            'Version': False,
+            'Deadline': False
         })
         self.view_vars = {name: tk.BooleanVar(value=self.view_settings.get(name, default)) for name, default in {
             'Priority': True,
@@ -38,7 +39,8 @@ class BugzillaTracker:
             'Activity': False,
             'Sub-Activity': False,
             'Importance': False,
-            'Version': False
+            'Version': False,
+            'Deadline': False
         }.items()}
         self.bugzilla_client = self.create_bugzilla_client()
         
@@ -71,7 +73,8 @@ class BugzillaTracker:
                 'Activity': False,
                 'Sub-Activity': False,
                 'Importance': False,
-                'Version': False
+                'Version': False,
+                'Deadline': False
             })
             return config
         return {
@@ -85,7 +88,8 @@ class BugzillaTracker:
                 'Activity': False,
                 'Sub-Activity': False,
                 'Importance': False,
-                'Version': False
+                'Version': False,
+                'Deadline': False
             }
         }
     
@@ -131,6 +135,7 @@ class BugzillaTracker:
             'sub_activity': bug.get('cf_subactivity', bug.get('sub_activity', '')),
             'importance': bug.get('importance', ''),
             'version': bug.get('version', ''),
+            'deadline': bug.get('deadline', ''),
             'description': bug.get('description', ''),
             'resolution': bug.get('resolution', ''),
             'last_change_time': bug.get('last_change_time')
@@ -164,6 +169,7 @@ class BugzillaTracker:
         view_menu.add_checkbutton(label="Show Sub-Activity", variable=self.view_vars['Sub-Activity'], command=self.update_display_columns)
         view_menu.add_checkbutton(label="Show Importance", variable=self.view_vars['Importance'], command=self.update_display_columns)
         view_menu.add_checkbutton(label="Show Version", variable=self.view_vars['Version'], command=self.update_display_columns)
+        view_menu.add_checkbutton(label="Show Deadline", variable=self.view_vars['Deadline'], command=self.update_display_columns)
         view_menu.add_separator()
         view_menu.add_command(label="Move current main tab left", command=self.move_current_main_tab_left)
         view_menu.add_command(label="Move current main tab right", command=self.move_current_main_tab_right)
@@ -266,7 +272,7 @@ class BugzillaTracker:
         
         tree = ttk.Treeview(
             tree_frame,
-            columns=('ID', 'Summary', 'Status', 'Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version'),
+            columns=('ID', 'Summary', 'Status', 'Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version', 'Deadline'),
             show='headings',
             yscrollcommand=scrollbar.set
         )
@@ -281,6 +287,7 @@ class BugzillaTracker:
         tree.heading('Sub-Activity', text='Sub-Activity')
         tree.heading('Importance', text='Importance')
         tree.heading('Version', text='Version')
+        tree.heading('Deadline', text='Deadline')
         
         tree.column('ID', width=80)
         tree.column('Summary', width=400)
@@ -292,6 +299,7 @@ class BugzillaTracker:
         tree.column('Sub-Activity', width=120)
         tree.column('Importance', width=120)
         tree.column('Version', width=120)
+        tree.column('Deadline', width=120)
         
         tree['displaycolumns'] = self.get_display_columns()
         
@@ -306,7 +314,7 @@ class BugzillaTracker:
     
     def get_display_columns(self):
         columns = ['ID', 'Summary', 'Status']
-        for name in ['Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version']:
+        for name in ['Priority', 'Assignee', 'Product', 'Activity', 'Sub-Activity', 'Importance', 'Version', 'Deadline']:
             if self.view_vars.get(name) and self.view_vars[name].get():
                 columns.append(name)
         return columns
@@ -451,6 +459,7 @@ class BugzillaTracker:
             info += f"Sub-Activity: {bug.get('sub_activity', 'N/A')}\n"
             info += f"Importance: {bug.get('importance', 'N/A')}\n"
             info += f"Version: {bug.get('version', 'N/A')}\n"
+            info += f"Deadline: {bug.get('deadline', 'N/A')}\n"
             info += f"Severity: {bug.get('severity', 'N/A')}\n"
             info += f"\nDescription:\n{bug.get('description', 'N/A')}"
             comments = bug.get('comments', [])
@@ -489,6 +498,7 @@ class BugzillaTracker:
             'cf_subactivity',
             'importance',
             'version',
+            'deadline',
             'description',
             'last_change_time'
         )
@@ -519,6 +529,7 @@ class BugzillaTracker:
                 'cf_subactivity',
                 'importance',
                 'version',
+                'deadline',
                 'description',
                 'resolution',
                 'last_change_time'
@@ -600,7 +611,8 @@ class BugzillaTracker:
                 bug.get('activity', ''),
                 bug.get('sub_activity', ''),
                 bug.get('importance', ''),
-                bug.get('version', '')
+                bug.get('version', ''),
+                bug.get('deadline', '')
             ))
     
     def fetch_comments(self, bug_id):

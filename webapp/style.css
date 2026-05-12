@@ -634,7 +634,7 @@ header {
 .badge-assigned    { background: var(--blue-dim);  color: var(--blue); }
 .badge-resolved    { background: var(--green-dim); color: var(--green); }
 .badge-new         { background: var(--amber-dim); color: var(--amber); }
-.badge-default     { background: var(--bg-elevated); color: var(--text-muted); }
+.badge-reopened { background: var(--red-dim); color: var(--red); }
 
 /* ─── Settings Modal ────────────────────────────────────────── */
 #settings-overlay {

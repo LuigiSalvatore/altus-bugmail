@@ -1,6 +1,7 @@
 import os
 import sys
 import socket
+import subprocess
 import json
 import threading
 import time
@@ -28,7 +29,7 @@ def load_config():
         config.setdefault('user_email', '')
         config.setdefault('view_settings', {
             'Priority': True, 'Assignee': True, 'Product': False,
-            'Activity': False, 'Sub-Activity': False, 'Importance': False, 'Version': False
+            'Activity': False, 'Sub-Activity': False, 'Importance': False, 'Version': False, 'Deadline': False
         })
         return config
     return {
@@ -37,7 +38,7 @@ def load_config():
         'user_email': '',
         'view_settings': {
             'Priority': True, 'Assignee': True, 'Product': False,
-            'Activity': False, 'Sub-Activity': False, 'Importance': False, 'Version': False
+            'Activity': False, 'Sub-Activity': False, 'Importance': False, 'Version': False, 'Deadline': False
         }
     }
 
@@ -50,13 +51,16 @@ def save_config(config):
 def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+        data.setdefault('review_bugs', [])
+        return data
     return {
         'current_bug': None,
         'on_hold_bugs': [],
         'assigned_bugs': [],
         'resolved_fixed_bugs': [],
         'resolved_implemented_bugs': [],
+        'review_bugs': [],
         'all_bugs': [],
         'last_update': None
     }
@@ -89,11 +93,13 @@ def normalize_bug(bug):
         'priority': bug.get('priority'),
         'severity': bug.get('severity'),
         'assigned_to': bug.get('assigned_to_detail', {}).get('email', bug.get('assigned_to', 'Unassigned')),
+        'qa_contact': bug.get('qa_contact_detail', {}).get('email', bug.get('qa_contact', '')),
         'product': bug.get('product', ''),
         'activity': bug.get('cf_activity', bug.get('activity', '')),
         'sub_activity': bug.get('cf_subactivity', bug.get('sub_activity', '')),
         'importance': bug.get('importance', ''),
         'version': bug.get('version', ''),
+        'deadline': bug.get('deadline', ''),
         'description': bug.get('description', ''),
         'resolution': bug.get('resolution', ''),
         'last_change_time': bug.get('last_change_time')
@@ -101,8 +107,9 @@ def normalize_bug(bug):
 
 
 FIELDS = ('id', 'summary', 'status', 'priority', 'severity', 'assigned_to',
-          'assigned_to_detail', 'product', 'cf_activity', 'cf_subactivity',
-          'importance', 'version', 'description', 'resolution', 'last_change_time')
+          'assigned_to_detail', 'qa_contact', 'qa_contact_detail', 'product',
+          'cf_activity', 'cf_subactivity', 'importance', 'version', 'deadline',
+          'description', 'resolution', 'last_change_time')
 
 
 def fetch_bugs(client, filters=None):
@@ -150,6 +157,7 @@ def do_refresh(config, data):
     data['assigned_bugs'] = fetch_bugs(client, {'assigned_to': assigned_to, 'status': 'ASSIGNED'})
     data['resolved_fixed_bugs'] = fetch_bugs(client, {'assigned_to': assigned_to, 'status': 'RESOLVED', 'resolution': 'FIXED'})
     data['resolved_implemented_bugs'] = fetch_bugs(client, {'assigned_to': assigned_to, 'status': 'RESOLVED', 'resolution': 'IMPLEMENTED'})
+    data['review_bugs'] = fetch_bugs(client, {'qa_contact': assigned_to})
     save_data(data)
     return True
 
@@ -163,6 +171,25 @@ _state = {
     'data': load_data(),
     'lock': threading.Lock()
 }
+
+_guard = None
+
+
+def _spawn_server_process():
+    args = [sys.executable, os.path.abspath(__file__)]
+    kwargs = {}
+    if os.name == 'nt':
+        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+    else:
+        kwargs['close_fds'] = True
+    return subprocess.Popen(args, **kwargs)
+
+
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if not func:
+        raise RuntimeError('Not running with the Werkzeug server')
+    func()
 
 
 def auto_refresh_loop():
@@ -225,6 +252,32 @@ def post_config():
         save_config(cfg)
         _state['config'] = cfg
     return jsonify({'ok': True})
+
+
+@app.route('/api/stop', methods=['POST'])
+def api_stop():
+    try:
+        shutdown_server()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/restart', methods=['POST'])
+def api_restart():
+    global _guard
+    try:
+        if _guard is not None:
+            try:
+                _guard.close()
+            except Exception:
+                pass
+            _guard = None
+        _spawn_server_process()
+        shutdown_server()
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ---------------------------------------------------------------------------

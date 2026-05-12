@@ -24,6 +24,8 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
         Refresh
       </button>
+      <button class="btn btn-danger btn-sm" id="btn-stop">Stop Server</button>
+      <button class="btn btn-outline btn-sm" id="btn-restart">Restart Server</button>
       <button class="btn btn-ghost btn-icon" id="btn-settings" title="Settings">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
       </button>
@@ -125,6 +127,10 @@
         </div>
         <div class="sub-tabs" id="sub-tabs">
           <button class="sub-tab active" data-tab="assigned">Assigned <span class="count" id="count-assigned">0</span></button>
+          <button class="sub-tab" data-tab="review">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Review <span class="count" id="count-review">0</span>
+          </button>
           <button class="sub-tab" data-tab="resolved_fixed">Resolved Fixed <span class="count" id="count-resolved_fixed">0</span></button>
           <button class="sub-tab" data-tab="resolved_implemented">Resolved Implemented <span class="count" id="count-resolved_implemented">0</span></button>
           <button class="sub-tab" data-tab="all">All Bugs <span class="count" id="count-all">0</span></button>
@@ -224,12 +230,12 @@ const state = {
   sortCol: null,
   sortDir: 1,
   countdown: 60,
-  visibleCols: { Priority: true, Assignee: true, Product: false, Activity: false, 'Sub-Activity': false, Importance: false, Version: false }
+  visibleCols: { Priority: true, Assignee: true, Product: false, Activity: false, 'Sub-Activity': false, Importance: false, Version: false, Deadline: false }
 };
 
-const ALL_COLS = ['Priority','Assignee','Product','Activity','Sub-Activity','Importance','Version'];
-const TAB_KEYS = { assigned: 'assigned_bugs', resolved_fixed: 'resolved_fixed_bugs', resolved_implemented: 'resolved_implemented_bugs', all: 'all_bugs' };
-const COL_FIELD = { ID:'id', Summary:'summary', Status:'status', Priority:'priority', Assignee:'assigned_to', Product:'product', Activity:'activity', 'Sub-Activity':'sub_activity', Importance:'importance', Version:'version' };
+const ALL_COLS = ['Priority','Assignee','Product','Activity','Sub-Activity','Importance','Version','Deadline','Component'];
+const TAB_KEYS = { assigned: 'assigned_bugs', review: 'review_bugs', resolved_fixed: 'resolved_fixed_bugs', resolved_implemented: 'resolved_implemented_bugs', all: 'all_bugs' };
+const COL_FIELD = { ID:'id', Summary:'summary', Status:'status', Priority:'priority', Assignee:'assigned_to', Product:'product', Activity:'activity', 'Sub-Activity':'sub_activity', Importance:'importance', Version:'version', Deadline:'deadline', Component:'component' };
 
 // ─── API helpers ──────────────────────────────────────────────
 async function api(method, path, body) {
@@ -320,6 +326,49 @@ async function doRefresh() {
   }
 }
 
+async function sendServerCommand(path) {
+  const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || res.statusText || 'Server request failed');
+  }
+  return res.json().catch(() => null);
+}
+
+async function stopServer() {
+  if (!confirm('Stop backend server?')) return;
+  setStatus('loading', 'Stopping backend…');
+  try {
+    await sendServerCommand('/api/stop');
+    toast('Backend stopping…', 'success');
+  } catch(e) {
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      toast('Backend stop requested', 'success');
+    } else {
+      setStatus('error', 'Stop failed');
+      toast(e.message, 'error');
+    }
+  }
+}
+
+async function restartServer() {
+  if (!confirm('Restart backend server?')) return;
+  setStatus('loading', 'Restarting backend…');
+  try {
+    await sendServerCommand('/api/restart');
+    toast('Backend restarting…', 'success');
+    setTimeout(() => window.location.reload(), 2200);
+  } catch(e) {
+    if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+      toast('Backend restart requested', 'success');
+      setTimeout(() => window.location.reload(), 2200);
+    } else {
+      setStatus('error', 'Restart failed');
+      toast(e.message, 'error');
+    }
+  }
+}
+
 async function loadData() {
   state.data = await api('GET', '/api/data');
   if (state.data) { setStatus('active', 'Loaded from cache'); renderAll(); }
@@ -381,6 +430,7 @@ function statusBadgeClass(s) {
   if (s === 'ASSIGNED') return 'badge-assigned';
   if (s === 'RESOLVED') return 'badge-resolved';
   if (s === 'NEW' || s === 'UNCONFIRMED') return 'badge-new';
+  if (s === 'REOPENED') return 'badge-reopened'; // red hue for reopened
   return 'badge-default';
 }
 
@@ -407,7 +457,7 @@ function renderCurrentBug() {
   const meta = [
     ['Priority', bug.priority], ['Severity', bug.severity], ['Assignee', bug.assigned_to],
     ['Product', bug.product], ['Activity', bug.activity], ['Sub-Activity', bug.sub_activity],
-    ['Importance', bug.importance], ['Version', bug.version]
+    ['Importance', bug.importance], ['Version', bug.version], ['Deadline', bug.deadline]
   ];
   document.getElementById('current-bug-meta').innerHTML = meta.map(([l,v]) => v ? `
     <div class="bug-meta-item">
@@ -524,6 +574,7 @@ function renderBugTable() {
   // Sort: assigned tab always sorts by local priority first
   let sorted = [...bugs];
   const isAssigned = state.activeTab === 'assigned';
+  const isReview   = state.activeTab === 'review';
   if (state.sortCol) {
     const field = COL_FIELD[state.sortCol] || state.sortCol.toLowerCase();
     sorted.sort((a,b) => {
@@ -544,9 +595,9 @@ function renderBugTable() {
     });
   }
 
-  // Head — ★ column always first
+  // Head — ★ column first (hidden on review tab)
   const thead = document.getElementById('bug-table-head');
-  const pHead = `<th class="lp-th" title="My Priority (click cells to set)">★ Prio</th>`;
+  const pHead = isReview ? '' : `<th class="lp-th" title="My Priority (click cells to set)">★ Prio</th>`;
   thead.innerHTML = `<tr>${pHead}${cols.map(c => {
     const cls = state.sortCol === c ? (state.sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     return `<th class="${cls}" data-col="${c}">${c}</th>`;
@@ -561,7 +612,7 @@ function renderBugTable() {
   const baseUrl = (state.config?.bugzilla_url || '').replace(/\/+$/, '');
   document.getElementById('bug-table-body').innerHTML = sorted.map(bug => `
     <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}">
-      <td class="lp-cell">${prioBadgeHTML(bug.id, isAssigned)}</td>
+      ${isReview ? '' : `<td class="lp-cell">${prioBadgeHTML(bug.id, isAssigned)}</td>`}
       ${cols.map(c => {
         if (c === 'ID') return `<td>${bug.id}</td>`;
         if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary||'')}</div></td>`;
@@ -581,6 +632,7 @@ function renderBugTable() {
 function renderCounts() {
   if (!state.data) return;
   document.getElementById('count-assigned').textContent = (state.data.assigned_bugs||[]).length;
+  document.getElementById('count-review').textContent = (state.data.review_bugs||[]).length;
   document.getElementById('count-resolved_fixed').textContent = (state.data.resolved_fixed_bugs||[]).length;
   document.getElementById('count-resolved_implemented').textContent = (state.data.resolved_implemented_bugs||[]).length;
   document.getElementById('count-all').textContent = (state.data.all_bugs||[]).length;
@@ -702,6 +754,8 @@ document.querySelectorAll('.sub-tab').forEach(btn => btn.addEventListener('click
 
 // ─── Header buttons ───────────────────────────────────────────
 document.getElementById('btn-refresh').addEventListener('click', doRefresh);
+document.getElementById('btn-stop').addEventListener('click', stopServer);
+document.getElementById('btn-restart').addEventListener('click', restartServer);
 document.getElementById('btn-settings').addEventListener('click', openSettings);
 
 // Close modals on overlay click
