@@ -9,6 +9,7 @@ import webbrowser
 from datetime import datetime
 from flask import Flask, jsonify, request, send_from_directory
 from apiBugzilla import Bugzilla
+from logger import logger
 
 app = Flask(__name__, static_folder='webapp', static_url_path='')
 
@@ -122,7 +123,7 @@ def fetch_bugs(client, filters=None):
             return []
         return [normalize_bug(b) for b in bugs]
     except Exception as e:
-        print(f'Error fetching bugs: {e}')
+        logger.error(f'fetch_bugs failed: {e}')
         return []
 
 
@@ -143,7 +144,7 @@ def fetch_comments(client, bug_id):
     try:
         return client.Get_Bug_Comment(bug_id) or []
     except Exception as e:
-        print(f'Error fetching comments: {e}')
+        logger.error(f'fetch_comments bug #{bug_id}: {e}')
         return []
 
 
@@ -203,9 +204,9 @@ def auto_refresh_loop():
                 with _state['lock']:
                     do_refresh(cfg, dat)
                     _state['data'] = dat
-                print(f'[auto-refresh] {datetime.now().strftime("%H:%M:%S")}')
+                logger.info(f'auto-refresh completed at {datetime.now().strftime("%H:%M:%S")}')
             except Exception as e:
-                print(f'[auto-refresh] error: {e}')
+                logger.error(f'auto-refresh failed: {e}')
 
 
 threading.Thread(target=auto_refresh_loop, daemon=True).start()
@@ -218,6 +219,39 @@ threading.Thread(target=auto_refresh_loop, daemon=True).start()
 @app.route('/')
 def index():
     return send_from_directory('webapp', 'index.html')
+
+
+# ---------------------------------------------------------------------------
+# Routes — logs
+# ---------------------------------------------------------------------------
+
+@app.route('/api/logs')
+def get_logs():
+    from logger import LOG_FILE
+    level_filter = request.args.get('level', '').upper()
+    lines_limit = int(request.args.get('lines', 500))
+    entries = []
+    try:
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, 'r', encoding='utf-8') as f:
+                raw_lines = f.readlines()[-lines_limit:]
+            for line in raw_lines:
+                line = line.rstrip()
+                if not line:
+                    continue
+                # parse: 2026-05-12 14:00:00 INFO     message
+                parts = line.split(' ', 3)
+                if len(parts) >= 4:
+                    level = parts[2].strip()
+                    if level_filter and level != level_filter:
+                        continue
+                    entries.append({'ts': f'{parts[0]} {parts[1]}', 'level': level, 'msg': parts[3]})
+                else:
+                    entries.append({'ts': '', 'level': 'DEBUG', 'msg': line})
+    except Exception as e:
+        logger.error(f'/api/logs read error: {e}')
+        return jsonify({'error': str(e)}), 500
+    return jsonify(entries)
 
 
 # ---------------------------------------------------------------------------
@@ -398,10 +432,19 @@ if __name__ == '__main__':
     try:
         _guard.bind(('127.0.0.1', 5001))
     except OSError:
-        # Port already held by a running instance — exit silently.
+        # Port already held — log and restart the existing instance, then exit.
+        logger.warning('server.py launched but instance already running on guard port 5001 — triggering restart')
+        try:
+            import urllib.request
+            urllib.request.urlopen(
+                urllib.request.Request('http://127.0.0.1:5000/api/restart', method='POST'),
+                timeout=3
+            )
+        except Exception as re:
+            logger.error(f'restart request failed: {re}')
         sys.exit(0)
 
-    print('Starting Bugzilla Tracker server at http://localhost:5000')
+    logger.info('Starting Bugzilla Tracker server at http://localhost:5000')
     # Open browser after brief delay
     def open_browser():
         time.sleep(1)
