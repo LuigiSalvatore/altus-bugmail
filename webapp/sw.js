@@ -1,11 +1,29 @@
 // Service Worker — Bugzilla Tracker
 // Strategy: Cache-first for app shell, network-only for API calls.
 
-const CACHE_NAME = 'bugtrack-shell-v1';
+const CACHE_NAME = 'bugtrack-shell-v3';
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
+  '/js/app.js',
+  '/js/api/client.js',
+  '/js/state/store.js',
+  '/js/ui/notifications.js',
+  '/js/ui/statusbar.js',
+  '/js/ui/countdown.js',
+  '/js/ui/tabs.js',
+  '/js/ui/modals.js',
+  '/js/render/templates.js',
+  '/js/views/currentBugView.js',
+  '/js/views/bugTableView.js',
+  '/js/views/holdView.js',
+  '/js/views/commitView.js',
+  '/js/views/logsView.js',
+  '/js/utils/constants.js',
+  '/js/utils/dom.js',
+  '/js/utils/priorities.js',
+  '/js/pwa/register.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];
