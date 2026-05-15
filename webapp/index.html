@@ -130,11 +130,13 @@
           <div class="col-toggles" id="col-toggles"></div>
         </div>
         <div class="sub-tabs" id="sub-tabs">
-          <button class="sub-tab active" data-tab="assigned">Assigned <span class="count" id="count-assigned">0</span></button>
+          <button class="sub-tab active" data-tab="to_work">To Work <span class="count" id="count-to_work">0</span></button>
+          <button class="sub-tab" data-tab="assigned">Assigned <span class="count" id="count-assigned">0</span></button>
           <button class="sub-tab" data-tab="review">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Review <span class="count" id="count-review">0</span>
           </button>
+          <button class="sub-tab" data-tab="reopened">Reopened <span class="count" id="count-reopened">0</span></button>
           <button class="sub-tab" data-tab="resolved_fixed">Resolved Fixed <span class="count" id="count-resolved_fixed">0</span></button>
           <button class="sub-tab" data-tab="resolved_implemented">Resolved Implemented <span class="count" id="count-resolved_implemented">0</span></button>
           <button class="sub-tab" data-tab="all">All Bugs <span class="count" id="count-all">0</span></button>
@@ -200,7 +202,12 @@
   <div id="bug-id-modal">
     <div class="modal-title">Set Current Bug</div>
     <div class="form-group">
-      <label class="form-label" for="input-bug-id">Bug ID</label>
+      <label class="form-label">Select from your bugs</label>
+      <input class="form-input" id="bug-picker-search" type="text" placeholder="Search bugs…" autocomplete="off">
+      <div id="bug-picker-list" class="bug-picker-list"></div>
+    </div>
+    <div class="form-group" style="border-top:1px solid var(--border);padding-top:12px;">
+      <label class="form-label" for="input-bug-id">Or enter Bug ID manually</label>
       <input class="form-input" id="input-bug-id" type="number" placeholder="e.g. 12345" min="1">
     </div>
     <div class="modal-actions">
@@ -238,7 +245,7 @@
 const state = {
   data: null,
   config: null,
-  activeTab: 'assigned',
+  activeTab: 'to_work',
   sortCol: null,
   sortDir: 1,
   countdown: 60,
@@ -254,9 +261,25 @@ async function api(method, path, body) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(path, opts);
-  const json = await r.json();
-  if (!r.ok) throw new Error(json.error || r.statusText);
-  return json;
+  const contentType = r.headers.get('Content-Type') || '';
+  if (!r.ok) {
+    // Try to extract error message from JSON if possible
+    let errMsg = r.statusText;
+    if (contentType.includes('application/json')) {
+      try {
+        const errJson = await r.json();
+        errMsg = errJson.error || JSON.stringify(errJson);
+      } catch (_) {}
+    } else {
+      try { errMsg = await r.text(); } catch (_) {}
+    }
+    throw new Error(errMsg);
+  }
+  if (contentType.includes('application/json')) {
+    try { return await r.json(); } catch (_) { return []; }
+  }
+  // Fallback: return raw text
+  return await r.text();
 }
 
 // ─── Toast ───────────────────────────────────────────────────
@@ -389,29 +412,27 @@ async function loadData() {
 // ─── Render ───────────────────────────────────────────────────
 function purgeNonAssignedPrios() {
   const assigned = state.data?.assigned_bugs || [];
-  const assignedIds = new Set(assigned.map(b => String(b.id)));
-  let prios    = getLocalPrios();
+  const reopened = (state.data?.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED');
+  const toWorkIds = new Set([...assigned, ...reopened].map(b => String(b.id)));
   let subPrios = getLocalSubPrios();
   let changed  = false;
-  Object.keys(prios).forEach(id => {
-    if (!assignedIds.has(id)) { delete prios[id]; changed = true; }
-  });
   Object.keys(subPrios).forEach(id => {
-    if (!assignedIds.has(id)) { delete subPrios[id]; changed = true; }
+    if (!toWorkIds.has(id)) { delete subPrios[id]; changed = true; }
   });
   if (changed) {
-    localStorage.setItem(LS_PRIO,     JSON.stringify(prios));
     localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
   }
 }
 
 function autoAssignSubPrios() {
   const assigned = state.data?.assigned_bugs || [];
-  if (!assigned.length) return;
+  const reopened = (state.data?.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED');
+  const toWork = [...assigned, ...reopened];
+  if (!toWork.length) return;
   const subPrios = getLocalSubPrios();
   // Separate bugs that already have a rank from new ones
-  const ranked   = assigned.filter(b => subPrios[String(b.id)] !== undefined && subPrios[String(b.id)] !== null);
-  const unranked = assigned.filter(b => subPrios[String(b.id)] === undefined  || subPrios[String(b.id)] === null);
+  const ranked   = toWork.filter(b => subPrios[String(b.id)] !== undefined && subPrios[String(b.id)] !== null);
+  const unranked = toWork.filter(b => subPrios[String(b.id)] === undefined  || subPrios[String(b.id)] === null);
   if (!unranked.length) return;
   const maxRank  = ranked.length ? Math.max(...ranked.map(b => subPrios[String(b.id)])) : 0;
   unranked.forEach((b, i) => { subPrios[String(b.id)] = maxRank + i + 1; });
@@ -512,27 +533,8 @@ function getActiveColumns() {
 }
 
 // ─── Local Bug Priority ───────────────────────────────────────
-const LS_PRIO = 'bz_local_prio';
 const LS_SUB_PRIO = 'bz_local_sub_prio';
-const PRIO_CYCLE  = [null, 'high', 'medium', 'low'];
-const PRIO_LABEL  = { high: '🔴 High', medium: '🟡 Medium', low: '🟢 Low' };
-const PRIO_ORDER  = { high: 0, medium: 1, low: 2 };
 
-function getLocalPrios() {
-  try { return JSON.parse(localStorage.getItem(LS_PRIO)) || {}; } catch(e) { return {}; }
-}
-function setLocalPrio(bugId, prio) {
-  const p = getLocalPrios();
-  if (prio === null) delete p[String(bugId)]; else p[String(bugId)] = prio;
-  localStorage.setItem(LS_PRIO, JSON.stringify(p));
-}
-function cycleLocalPrio(bugId) {
-  const p = getLocalPrios();
-  const cur = p[String(bugId)] || null;
-  const next = PRIO_CYCLE[(PRIO_CYCLE.indexOf(cur) + 1) % PRIO_CYCLE.length];
-  setLocalPrio(bugId, next);
-  renderBugTable();
-}
 function getLocalSubPrios() {
   try { return JSON.parse(localStorage.getItem(LS_SUB_PRIO)) || {}; } catch(e) { return {}; }
 }
@@ -554,62 +556,77 @@ function moveSubPrio(bugId, dir) {
   localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
   renderBugTable();
 }
-function prioBadgeHTML(bugId, isAssigned) {
-  const p  = getLocalPrios()[String(bugId)];
-  const b1 = !p ? `<span class="lp-badge lp-none" onclick="event.stopPropagation();cycleLocalPrio(${bugId})" title="Click to set priority">—</span>`
-                : `<span class="lp-badge lp-${p}" onclick="event.stopPropagation();cycleLocalPrio(${bugId})" title="Click to change priority">${PRIO_LABEL[p]}</span>`;
-  if (!isAssigned) return `<div class="lp-cell-wrap">${b1}</div>`;
+function prioBadgeHTML(bugId) {
   const sp      = getLocalSubPrios()[String(bugId)] ?? '?';
-  const total   = (state.data?.assigned_bugs||[]).length;
+  const toWork  = (state.data?.assigned_bugs || []).concat((state.data?.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED'));
+  const total   = toWork.length;
   const atTop   = sp === 1;
   const atBot   = sp === total;
-  const b2 = `<div class="sp-rank" onclick="event.stopPropagation()">
-    <button class="sp-arrow${atTop?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},-1)" title="Move up" ${atTop?'disabled':''}>▲</button>
-    <span class="lp-sub-badge lp-num">${sp}</span>
-    <button class="sp-arrow${atBot?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},1)" title="Move down" ${atBot?'disabled':''}>▼</button>
+  return `<div class="lp-cell-wrap">
+    <span class="drag-handle" title="Drag to reorder">⠿</span>
+    <div class="sp-rank" onclick="event.stopPropagation()">
+      <button class="sp-arrow${atTop?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},-1)" title="Move up" ${atTop?'disabled':''}>▲</button>
+      <span class="lp-sub-badge lp-num">${sp}</span>
+      <button class="sp-arrow${atBot?' sp-arrow-disabled':''}" onclick="moveSubPrio(${bugId},1)" title="Move down" ${atBot?'disabled':''}>▼</button>
+    </div>
   </div>`;
-  return `<div class="lp-cell-wrap">${b1}${b2}</div>`;
-}
-function prioSortVal(bugId) {
-  const p = getLocalPrios()[String(bugId)];
-  return p ? PRIO_ORDER[p] : 99;
 }
 function subPrioSortVal(bugId) {
   const sp = getLocalSubPrios()[String(bugId)];
   return (sp !== undefined && sp !== null) ? sp : 999999;
 }
 
+async function copyBugId(bugId, ev) {
+  ev.stopPropagation();
+  try { await navigator.clipboard.writeText(String(bugId)); toast(`Copied: ${bugId}`, 'success'); }
+  catch(e) { toast('Copy failed', 'error'); }
+}
+async function copyBugFullName(bugId, summary, ev) {
+  ev.stopPropagation();
+  const text = `BUG-${bugId} - ${summary}`;
+  try { await navigator.clipboard.writeText(text); toast(`Copied: ${text}`, 'success'); }
+  catch(e) { toast('Copy failed', 'error'); }
+}
+
 function renderBugTable() {
   const cols = getActiveColumns();
-  const bugs = state.data?.[TAB_KEYS[state.activeTab]] || [];
-
-  // Sort: assigned tab always sorts by local priority first
-  let sorted = [...bugs];
-  const isAssigned = state.activeTab === 'assigned';
+  const isToWork   = state.activeTab === 'to_work';
   const isReview   = state.activeTab === 'review';
+  let bugsList = [];
+  if (state.activeTab === 'assigned') {
+    bugsList = state.data.assigned_bugs || [];
+  } else if (state.activeTab === 'to_work') {
+    const assigned = state.data.assigned_bugs || [];
+    const reopened = (state.data.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED');
+    bugsList = assigned.concat(reopened);
+  } else if (state.activeTab === 'reopened') {
+    bugsList = (state.data.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED');
+  } else {
+    bugsList = state.data?.[TAB_KEYS[state.activeTab]] || [];
+  }
+  const bugs = bugsList;
+
+  // Sort
+  let sorted = [...bugs];
   if (state.sortCol) {
     const field = COL_FIELD[state.sortCol] || state.sortCol.toLowerCase();
     sorted.sort((a,b) => {
-      if (isAssigned) {
-        const pd = prioSortVal(a.id) - prioSortVal(b.id);
-        if (pd !== 0) return pd;
+      if (isToWork) {
         const spd = subPrioSortVal(a.id) - subPrioSortVal(b.id);
         if (spd !== 0) return spd;
       }
       const av = String(a[field]||''), bv = String(b[field]||'');
       return av.localeCompare(bv) * state.sortDir;
     });
-  } else if (isAssigned) {
+  } else if (isToWork) {
     sorted.sort((a,b) => {
-      const pd = prioSortVal(a.id) - prioSortVal(b.id);
-      if (pd !== 0) return pd;
       return subPrioSortVal(a.id) - subPrioSortVal(b.id);
     });
   }
 
-  // Head — ★ column first (hidden on review tab)
+  // Head — ★ column only on to_work tab
   const thead = document.getElementById('bug-table-head');
-  const pHead = isReview ? '' : `<th class="lp-th" title="My Priority (click cells to set)">★ Prio</th>`;
+  const pHead = isToWork ? `<th class="lp-th" title="Priority order">★ Prio</th>` : '';
   thead.innerHTML = `<tr>${pHead}${cols.map(c => {
     const cls = state.sortCol === c ? (state.sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
     return `<th class="${cls}" data-col="${c}">${c}</th>`;
@@ -622,29 +639,123 @@ function renderBugTable() {
 
   // Body
   const baseUrl = (state.config?.bugzilla_url || '').replace(/\/+$/, '');
-  document.getElementById('bug-table-body').innerHTML = sorted.map(bug => `
-    <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}">
-      ${isReview ? '' : `<td class="lp-cell">${prioBadgeHTML(bug.id, isAssigned)}</td>`}
+  document.getElementById('bug-table-body').innerHTML = sorted.map(bug => {
+    const escapedSummary = esc(bug.summary||'').replace(/'/g, "\\'");
+    const isCurrent = state.data?.current_bug?.id == bug.id;
+    return `
+    <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}"${isToWork ? ' draggable="true"' : ''}>
+      ${isToWork ? `<td class="lp-cell">${prioBadgeHTML(bug.id)}</td>` : ''}
       ${cols.map(c => {
-        if (c === 'ID') return `<td>${bug.id}</td>`;
+        if (c === 'ID') return `<td><div class="bug-id-cell"><span>${bug.id}</span><button class="copy-btn" onclick="copyBugFullName(${bug.id},'${escapedSummary}',event)" title="Copy full name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button class="copy-btn" onclick="copyBugId(${bug.id},event)" title="Copy bug ID"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12v12H4z"/><path d="M8 8h12v12H8z"/></svg></button><button class="copy-btn set-current-btn${isCurrent ? ' is-current' : ''}" onclick="setCurrentFromTable(${bug.id},event)" title="${isCurrent ? 'Currently working on' : 'Set as current bug'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></button></div></td>`;
         if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary||'')}</div></td>`;
         if (c === 'Status') return `<td><span class="badge ${statusBadgeClass(bug.status)}">${esc(bug.status||'')}</span></td>`;
         const field = COL_FIELD[c] || c.toLowerCase();
         return `<td><div class="cell-truncate">${esc(bug[field]||'')}</div></td>`;
       }).join('')}
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 
+  // Attach events
   document.querySelectorAll('#bug-table-body tr').forEach(tr => {
     tr.addEventListener('dblclick', () => window.open(tr.dataset.url, '_blank'));
     tr.addEventListener('keydown', e => { if (e.key === 'Enter') window.open(tr.dataset.url, '_blank'); });
     tr.setAttribute('tabindex', '0');
   });
+
+  // Drag-and-drop reordering (To Work tab only)
+  if (isToWork) initDragReorder();
+}
+
+// ─── Drag-and-Drop Reordering ─────────────────────────────────
+let _dragBugId = null;
+
+function initDragReorder() {
+  const tbody = document.getElementById('bug-table-body');
+  const rows = tbody.querySelectorAll('tr[draggable="true"]');
+
+  rows.forEach(tr => {
+    tr.addEventListener('dragstart', e => {
+      _dragBugId = tr.dataset.id;
+      tr.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      // Use a minimal transparent drag image
+      const ghost = tr.cloneNode(true);
+      ghost.style.cssText = 'position:absolute;top:-9999px;opacity:0.7;background:var(--bg-elevated);';
+      document.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, 0, 0);
+      requestAnimationFrame(() => ghost.remove());
+    });
+
+    tr.addEventListener('dragend', () => {
+      _dragBugId = null;
+      tr.classList.remove('dragging');
+      tbody.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+    });
+
+    tr.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (!_dragBugId || tr.dataset.id === _dragBugId) return;
+      // Determine if cursor is in top or bottom half
+      const rect = tr.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      tbody.querySelectorAll('.drag-over-top,.drag-over-bottom').forEach(el => {
+        el.classList.remove('drag-over-top', 'drag-over-bottom');
+      });
+      if (e.clientY < midY) {
+        tr.classList.add('drag-over-top');
+      } else {
+        tr.classList.add('drag-over-bottom');
+      }
+    });
+
+    tr.addEventListener('dragleave', () => {
+      tr.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    tr.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!_dragBugId || tr.dataset.id === _dragBugId) return;
+      const targetId = tr.dataset.id;
+      const rect = tr.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      const insertBefore = e.clientY < midY;
+
+      // Reorder sub-priorities
+      const subPrios = getLocalSubPrios();
+      const dragRank = subPrios[String(_dragBugId)];
+      const targetRank = subPrios[String(targetId)];
+      if (dragRank === undefined || targetRank === undefined) return;
+
+      // Build ordered list of [id, rank], sorted by rank
+      const ordered = Object.entries(subPrios).sort((a,b) => a[1] - b[1]);
+      // Remove the dragged item
+      const dragIdx = ordered.findIndex(([id]) => id === String(_dragBugId));
+      const [dragEntry] = ordered.splice(dragIdx, 1);
+      // Find target position after removal
+      let targetIdx = ordered.findIndex(([id]) => id === String(targetId));
+      if (!insertBefore) targetIdx += 1;
+      // Insert at new position
+      ordered.splice(targetIdx, 0, dragEntry);
+      // Reassign ranks 1..N
+      ordered.forEach(([id], i) => { subPrios[id] = i + 1; });
+      localStorage.setItem(LS_SUB_PRIO, JSON.stringify(subPrios));
+
+      _dragBugId = null;
+      renderBugTable();
+      toast('Priority reordered', 'success');
+    });
+  });
 }
 
 function renderCounts() {
   if (!state.data) return;
+  document.getElementById('count-to_work').textContent = ((state.data.assigned_bugs||[]).length + (state.data.all_bugs||[]).filter(b=>String(b.status).toUpperCase()==='REOPENED').length);
   document.getElementById('count-assigned').textContent = (state.data.assigned_bugs||[]).length;
   document.getElementById('count-review').textContent = (state.data.review_bugs||[]).length;
+  document.getElementById('count-reopened').textContent = (state.data.all_bugs||[]).filter(b=>String(b.status).toUpperCase()==='REOPENED').length;
   document.getElementById('count-resolved_fixed').textContent = (state.data.resolved_fixed_bugs||[]).length;
   document.getElementById('count-resolved_implemented').textContent = (state.data.resolved_implemented_bugs||[]).length;
   document.getElementById('count-all').textContent = (state.data.all_bugs||[]).length;
@@ -665,11 +776,77 @@ function renderColToggles() {
 }
 
 // ─── Actions ─────────────────────────────────────────────────
+async function setCurrentBug(bugId) {
+  setStatus('loading', `Fetching bug #${bugId}…`);
+  try {
+    const bug = await api('POST', '/api/current-bug', { bug_id: bugId });
+    state.data = state.data || {};
+    state.data.current_bug = bug;
+    renderCurrentBug();
+    renderBugTable();
+    setStatus('active', 'Up to date');
+    toast(`Bug #${bugId} set as current`, 'success');
+  } catch(e) { setStatus('error', e.message); toast(e.message, 'error'); }
+}
+
+async function setCurrentFromTable(bugId, ev) {
+  ev.stopPropagation();
+  if (state.data?.current_bug?.id == bugId) { toast('Already the current bug', 'info'); return; }
+  if (state.data?.current_bug && !confirm(`Replace current bug #${state.data.current_bug.id} with #${bugId}?`)) return;
+  await setCurrentBug(bugId);
+}
+
 function openAddBugDialog() {
   document.getElementById('input-bug-id').value = '';
+  document.getElementById('bug-picker-search').value = '';
+  populateBugPicker('');
   document.getElementById('bug-id-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('input-bug-id').focus(), 50);
+  setTimeout(() => document.getElementById('bug-picker-search').focus(), 50);
 }
+
+function populateBugPicker(filter) {
+  const list = document.getElementById('bug-picker-list');
+  // Gather all known bugs (assigned + reopened + all_bugs) deduplicated
+  const seen = new Set();
+  const allBugs = [];
+  const sources = ['assigned_bugs', 'review_bugs', 'all_bugs'];
+  sources.forEach(key => {
+    (state.data?.[key] || []).forEach(b => {
+      if (!seen.has(b.id)) { seen.add(b.id); allBugs.push(b); }
+    });
+  });
+  // Filter
+  const q = filter.toLowerCase().trim();
+  const filtered = q
+    ? allBugs.filter(b => String(b.id).includes(q) || (b.summary||'').toLowerCase().includes(q))
+    : allBugs;
+  const currentId = state.data?.current_bug?.id;
+  if (!filtered.length) {
+    list.innerHTML = '<div class="bug-picker-empty">No bugs found</div>';
+    return;
+  }
+  list.innerHTML = filtered.slice(0, 50).map(b => `
+    <div class="bug-picker-item${b.id == currentId ? ' is-current' : ''}" data-id="${b.id}">
+      <span class="bug-picker-id">#${b.id}</span>
+      <span class="bug-picker-summary">${esc(b.summary||'')}</span>
+      <span class="badge ${statusBadgeClass(b.status)}" style="flex-shrink:0;font-size:9px;">${esc(b.status||'')}</span>
+    </div>
+  `).join('');
+  list.querySelectorAll('.bug-picker-item').forEach(el => {
+    el.addEventListener('click', () => {
+      closeBugIdDialog();
+      const id = el.dataset.id;
+      if (state.data?.current_bug && state.data.current_bug.id != id) {
+        if (!confirm(`Replace current bug #${state.data.current_bug.id} with #${id}?`)) return;
+      }
+      setCurrentBug(id);
+    });
+  });
+}
+
+document.getElementById('bug-picker-search').addEventListener('input', e => {
+  populateBugPicker(e.target.value);
+});
 
 function closeBugIdDialog() {
   document.getElementById('bug-id-overlay').classList.remove('open');
@@ -679,15 +856,7 @@ document.getElementById('btn-confirm-bug-id').addEventListener('click', async ()
   const id = document.getElementById('input-bug-id').value.trim();
   if (!id) return;
   closeBugIdDialog();
-  setStatus('loading', `Fetching bug #${id}…`);
-  try {
-    const bug = await api('POST', '/api/current-bug', { bug_id: id });
-    state.data = state.data || {};
-    state.data.current_bug = bug;
-    renderCurrentBug();
-    setStatus('active', 'Up to date');
-    toast(`Bug #${id} set as current`, 'success');
-  } catch(e) { setStatus('error', e.message); toast(e.message, 'error'); }
+  await setCurrentBug(id);
 });
 
 document.getElementById('input-bug-id').addEventListener('keydown', e => {

@@ -613,6 +613,40 @@ header {
 .bug-table tbody td:first-child { color: var(--accent-light); font-weight: 600; }
 .bug-table tbody td.col-summary  { color: var(--text-primary); max-width: 400px; }
 
+/* ─── Bug ID Cell (with copy buttons) ───────────────────────── */
+.bug-id-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.bug-table tbody tr:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: var(--accent-dim);
+  color: var(--accent-light);
+  border-color: var(--border-hover);
+}
+
 .cell-truncate {
   max-width: 320px;
   white-space: nowrap;
@@ -733,9 +767,85 @@ header {
   border: 1px solid var(--border-hover);
   border-radius: var(--radius-lg);
   padding: 28px;
-  width: 340px;
+  width: 520px;
+  max-width: 95vw;
   box-shadow: var(--shadow);
   animation: modal-in 200ms cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ─── Bug Picker ────────────────────────────────────────────── */
+.bug-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+  background: var(--bg-surface);
+}
+
+.bug-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+  border-bottom: 1px solid var(--border);
+}
+
+.bug-picker-item:last-child { border-bottom: none; }
+.bug-picker-item:hover { background: var(--accent-dim); }
+
+.bug-picker-item.is-current {
+  background: rgba(245,158,11,0.08);
+  border-left: 3px solid var(--amber);
+}
+
+.bug-picker-id {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-light);
+  flex-shrink: 0;
+  min-width: 55px;
+}
+
+.bug-picker-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bug-picker-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ─── Set as Current Bug Button (in table) ──────────────────── */
+.set-current-btn {
+  opacity: 0;
+}
+
+.bug-table tbody tr:hover .set-current-btn {
+  opacity: 1;
+}
+
+.set-current-btn:hover {
+  color: var(--amber) !important;
+  background: var(--amber-dim) !important;
+  border-color: rgba(245,158,11,0.35) !important;
+}
+
+.set-current-btn.is-current {
+  opacity: 1 !important;
+  color: var(--amber) !important;
+  background: var(--amber-dim);
+  border-color: rgba(245,158,11,0.3);
 }
 
 /* ─── Toast ─────────────────────────────────────────────────── */
@@ -831,28 +941,6 @@ header {
   gap: 6px;
 }
 
-.lp-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3px 9px;
-  border-radius: 99px;
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all var(--transition);
-  border: 1px solid transparent;
-  user-select: none;
-}
-
-.lp-none {
-  color: var(--text-muted);
-  border-color: var(--border);
-  background: transparent;
-}
-.lp-none:hover { border-color: var(--border-hover); color: var(--text-secondary); background: var(--bg-elevated); }
-
 .lp-sub-badge {
   display: inline-flex;
   align-items: center;
@@ -901,26 +989,47 @@ header {
   cursor: default;
 }
 
-.lp-high {
-  background: var(--red-dim);
-  color: var(--red);
-  border-color: rgba(239,68,68,0.35);
+/* ─── Drag Handle ───────────────────────────────────────────── */
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: grab;
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition);
+  user-select: none;
+  flex-shrink: 0;
 }
-.lp-high:hover { background: rgba(239,68,68,0.25); }
 
-.lp-medium {
-  background: var(--amber-dim);
-  color: var(--amber);
-  border-color: rgba(245,158,11,0.35);
+.bug-table tbody tr:hover .drag-handle {
+  opacity: 0.6;
 }
-.lp-medium:hover { background: rgba(245,158,11,0.25); }
 
-.lp-low {
-  background: var(--green-dim);
-  color: var(--green);
-  border-color: rgba(16,185,129,0.35);
+.drag-handle:hover {
+  opacity: 1 !important;
+  color: var(--accent-light);
 }
-.lp-low:hover { background: rgba(16,185,129,0.25); }
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* ─── Drag-and-Drop States ──────────────────────────────────── */
+.bug-table tbody tr.dragging {
+  opacity: 0.3;
+}
+
+.bug-table tbody tr.drag-over-top {
+  box-shadow: inset 0 2px 0 0 var(--accent);
+}
+
+.bug-table tbody tr.drag-over-bottom {
+  box-shadow: inset 0 -2px 0 0 var(--accent);
+}
 
 /* ─── Commit Prompt — Collapsible (main page) ───────────────── */
 .commit-collapsible {
