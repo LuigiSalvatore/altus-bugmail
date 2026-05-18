@@ -18,6 +18,7 @@ Operational guide for AI coding agents working on the Bugzilla Tracker codebase.
 | Modify the design system | `webapp/style.css` — all tokens are CSS custom properties in `:root` |
 | Add a toast notification | `import { toast } from './ui/notifications.js'` then call `toast(msg, type)` |
 | Add a status bar update | `import { setStatus } from './ui/statusbar.js'` then call `setStatus(state, text)` |
+| Wipe client data & stop server | `webapp/js/api/client.js` → `restartServer()` (now performs a full nuke) |
 | Copy a rich text bug link | `import { copyRichTextToClipboard, buildBugClipboardPayload } from '../utils/dom.js'` |
 
 ## Safe Modification Patterns

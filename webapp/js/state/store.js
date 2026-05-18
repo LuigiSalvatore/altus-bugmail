@@ -2,6 +2,8 @@
 // Single centralized state object for the frontend.
 // All modules import and mutate this shared object.
 
+import { LS_SORT_COL, LS_SORT_DIR } from '../utils/constants.js';
+
 const state = {
   /** Bug data fetched from the backend (mirrors bugzilla_data.json). */
   data: null,
@@ -13,10 +15,10 @@ const state = {
   activeTab: 'to_work',
 
   /** Current sort column in the bug table (null = default order). */
-  sortCol: null,
+  sortCol: localStorage.getItem(LS_SORT_COL) || null,
 
   /** Sort direction: 1 = ascending, -1 = descending. */
-  sortDir: 1,
+  sortDir: parseInt(localStorage.getItem(LS_SORT_DIR)) || 1,
 
   /** Countdown seconds until next auto-refresh. */
   countdown: 60,

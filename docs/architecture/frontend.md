@@ -14,7 +14,7 @@ webapp/
 └── js/
     ├── app.js              Bootstrap, renderAll(), event wiring, init sequence
     ├── api/
-    │   └── client.js       HTTP fetch wrapper, refresh/stop/restart actions
+    │   └── client.js       HTTP fetch wrapper, refresh/stop/wipe actions
     ├── state/
     │   └── store.js        Centralized state object (single source of truth)
     ├── ui/
@@ -122,6 +122,7 @@ Single mutable object shared across all modules:
 ### Local State (`localStorage`)
 Persistent user preferences not synced to backend:
 - `bz_local_sub_prio` — per-bug priority ranking (To Work tab)
+- `bz_sort_col` / `bz_sort_dir` — table sort state
 - `bz_commit_state` — commit prompt form values
 - `bz_branches_*` — branch lists per repository
 - `bz_repos` — repository list

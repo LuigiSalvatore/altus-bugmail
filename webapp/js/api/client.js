@@ -63,6 +63,12 @@ export async function loadConfig(renderColToggles) {
   if (state.config.view_settings) {
     state.visibleCols = { ...state.visibleCols, ...state.config.view_settings };
   }
+  if (state.config.sort_col !== undefined) {
+    state.sortCol = state.config.sort_col;
+  }
+  if (state.config.sort_dir !== undefined) {
+    state.sortDir = state.config.sort_dir;
+  }
   if (renderColToggles) renderColToggles();
 }
 
@@ -122,21 +128,40 @@ export async function stopServer() {
 }
 
 /**
- * Request the backend to restart the server process.
+ * Completely stop the server and wipe client data.
  */
 export async function restartServer() {
-  if (!confirm('Restart backend server?')) return;
-  setStatus('loading', 'Restarting backend…');
+  if (!confirm('Wipe all client data and completely stop the backend server?')) return;
+  setStatus('loading', 'Wiping data and stopping server…');
+  
   try {
-    await sendServerCommand('/api/restart');
-    toast('Backend restarting…', 'success');
-    setTimeout(() => window.location.reload(), 2200);
+    localStorage.clear();
+    
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    }
+    
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      for (const key of keys) {
+        await caches.delete(key);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to wipe client data', e);
+  }
+
+  try {
+    await sendServerCommand('/api/stop');
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff;font-family:sans-serif;flex-direction:column;text-align:center;"><h1>Client Wiped & Server Stopped</h1><p style="color:#94a3b8;margin-top:10px;">You may now safely close this tab.</p></div>';
   } catch (e) {
     if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
-      toast('Backend restart requested', 'success');
-      setTimeout(() => window.location.reload(), 2200);
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#fff;font-family:sans-serif;flex-direction:column;text-align:center;"><h1>Client Wiped & Server Stopped</h1><p style="color:#94a3b8;margin-top:10px;">You may now safely close this tab.</p></div>';
     } else {
-      setStatus('error', 'Restart failed');
+      setStatus('error', 'Stop failed');
       toast(e.message, 'error');
     }
   }

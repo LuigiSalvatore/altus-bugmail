@@ -36,6 +36,10 @@ def post_config():
             cfg['api_key'] = body['api_key']
         if 'view_settings' in body:
             cfg['view_settings'] = body['view_settings']
+        if 'sort_col' in body:
+            cfg['sort_col'] = body['sort_col']
+        if 'sort_dir' in body:
+            cfg['sort_dir'] = body['sort_dir']
         save_config(cfg)
         st['config'] = cfg
     return jsonify({'ok': True})

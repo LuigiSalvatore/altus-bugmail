@@ -39,6 +39,8 @@ export const LS_CS       = 'bz_commit_state';
 export const LS_BR       = 'bz_branches';
 export const LS_RE       = 'bz_repos';
 export const LS_FH       = 'bz_file_hist';
+export const LS_SORT_COL = 'bz_sort_col';
+export const LS_SORT_DIR = 'bz_sort_dir';
 
 // ─── Defaults ─────────────────────────────────────────────────
 

@@ -10,7 +10,7 @@ import { statusBadgeClass } from '../render/templates.js';
 import {
   getLocalSubPrios, subPrioSortVal, moveSubPrio
 } from '../utils/priorities.js';
-import { LS_SUB_PRIO } from '../utils/constants.js';
+import { LS_SUB_PRIO, LS_SORT_COL, LS_SORT_DIR } from '../utils/constants.js';
 
 // ─── Drag-and-drop state ─────────────────────────────────────
 let _dragBugId = null;
@@ -97,6 +97,9 @@ export function renderBugTable() {
     th.addEventListener('click', () => {
       if (state.sortCol === th.dataset.col) state.sortDir *= -1;
       else { state.sortCol = th.dataset.col; state.sortDir = 1; }
+      localStorage.setItem(LS_SORT_COL, state.sortCol);
+      localStorage.setItem(LS_SORT_DIR, state.sortDir);
+      api('POST', '/api/config', { sort_col: state.sortCol, sort_dir: state.sortDir });
       renderBugTable();
     })
   );
