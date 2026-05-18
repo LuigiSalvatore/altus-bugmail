@@ -43,3 +43,64 @@ export async function copyBugFullName(bugId, summary, ev) {
     toast('Copy failed', 'error');
   }
 }
+
+export async function copyRichTextToClipboard(plainText, htmlText) {
+    await navigator.clipboard.write([
+        new ClipboardItem({
+            'text/plain': new Blob(
+                [plainText],
+                { type: 'text/plain' }
+            ),
+            'text/html': new Blob(
+                [htmlText],
+                { type: 'text/html' }
+            )
+        })
+    ]);
+}
+
+/**
+ * Extract the numeric portion of a bug ID.
+ */
+export function extractNumericBugId(bugId) {
+  const match = String(bugId).match(/(\d+)/);
+  return match ? match[1] : '';
+}
+
+/**
+ * Remove the bug ID prefix from a summary string.
+ */
+export function removeBugIdPrefix(summary, bugId) {
+  if (!summary) return '';
+  const escaped = String(bugId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return summary
+    .replace(new RegExp(`^${escaped}\\s*[-:]*\\s*`, 'i'), '')
+    .trim();
+}
+
+/**
+ * Build a markdown link for a bug ID and summary.
+ */
+export function buildBugMarkdownLink(bugId, summary) {
+  const numericId = extractNumericBugId(bugId);
+  if (!numericId) return '';
+  const cleanSummary = removeBugIdPrefix(summary, bugId);
+  return `[bug-${bugId}](https://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=${numericId}) - ${cleanSummary}`;
+}
+
+export function buildBugClipboardPayload(bugId, summary) {
+    const numericId = extractNumericBugId(bugId);
+
+    if (!numericId) {
+        return null;
+    }
+
+    const cleanSummary = removeBugIdPrefix(summary, bugId);
+
+    const url = `https://vmbugzilla.altus.com.br/demandas/show_bug.cgi?id=${numericId}`;
+
+    return {
+        plainText: `${bugId} - ${cleanSummary}`,
+        htmlText: `<a href="${url}">${bugId}</a> - ${cleanSummary}`
+    };
+}

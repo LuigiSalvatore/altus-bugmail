@@ -4,7 +4,7 @@
 
 import state from '../state/store.js';
 import { api } from '../api/client.js';
-import { esc } from '../utils/dom.js';
+import { esc, buildBugClipboardPayload, copyRichTextToClipboard } from '../utils/dom.js';
 import { ALL_COLS, TAB_KEYS, COL_FIELD } from '../utils/constants.js';
 import { statusBadgeClass } from '../render/templates.js';
 import {
@@ -110,12 +110,12 @@ export function renderBugTable() {
     <tr data-id="${bug.id}" data-url="${baseUrl}/show_bug.cgi?id=${bug.id}"${isToWork ? ' draggable="true"' : ''}>
       ${isToWork ? `<td class="lp-cell">${prioBadgeHTML(bug.id)}</td>` : ''}
       ${cols.map(c => {
-        if (c === 'ID') return `<td><div class="bug-id-cell"><span>${bug.id}</span><button class="copy-btn" data-copy-full="${bug.id}" data-copy-summary="${escapedSummary}" title="Copy full name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button class="copy-btn" data-copy-id="${bug.id}" title="Copy bug ID"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12v12H4z"/><path d="M8 8h12v12H8z"/></svg></button><button class="copy-btn set-current-btn${isCurrent ? ' is-current' : ''}" data-set-current="${bug.id}" title="${isCurrent ? 'Currently working on' : 'Set as current bug'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></button></div></td>`;
-        if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary || '')}</div></td>`;
-        if (c === 'Status') return `<td><span class="badge ${statusBadgeClass(bug.status)}">${esc(bug.status || '')}</span></td>`;
-        const field = COL_FIELD[c] || c.toLowerCase();
-        return `<td><div class="cell-truncate">${esc(bug[field] || '')}</div></td>`;
-      }).join('')}
+      if (c === 'ID') return `<td><div class="bug-id-cell"><span>${bug.id}</span><button class="copy-btn" data-copy-full="${bug.id}" data-copy-summary="${escapedSummary}" title="Copy full name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button class="copy-btn" data-copy-id="${bug.id}" title="Copy bug ID"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12v12H4z"/><path d="M8 8h12v12H8z"/></svg></button><button class="copy-btn" data-copy-link="${bug.id}" data-copy-summary="${escapedSummary}" title="Copy link as name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button><button class="copy-btn set-current-btn${isCurrent ? ' is-current' : ''}" data-set-current="${bug.id}" title="${isCurrent ? 'Currently working on' : 'Set as current bug'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></button></div></td>`;
+      if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary || '')}</div></td>`;
+      if (c === 'Status') return `<td><span class="badge ${statusBadgeClass(bug.status)}">${esc(bug.status || '')}</span></td>`;
+      const field = COL_FIELD[c] || c.toLowerCase();
+      return `<td><div class="cell-truncate">${esc(bug[field] || '')}</div></td>`;
+    }).join('')}
     </tr>`;
   }).join('');
 
@@ -161,6 +161,29 @@ function _attachButtonEvents() {
       const bugId = btn.dataset.copyId;
       try { await navigator.clipboard.writeText(String(bugId)); toast(`Copied: ${bugId}`, 'success'); }
       catch (e) { toast('Copy failed', 'error'); }
+    });
+  });
+
+  // Copy link as name buttons
+  document.querySelectorAll('[data-copy-link]').forEach(btn => {
+    btn.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const bugId = btn.dataset.copyLink;
+      const summary = btn.dataset.copySummary;
+      
+      const payload = buildBugClipboardPayload(bugId, summary);
+      
+      if (!payload) {
+        toast('Unable to extract numeric bug ID', 'error');
+        return;
+      }
+      
+      try {
+        await copyRichTextToClipboard(payload.plainText, payload.htmlText);
+        toast('Copied bug link', 'success');
+      } catch (e) { 
+        toast('Copy failed', 'error'); 
+      }
     });
   });
 
@@ -299,7 +322,7 @@ export function renderCounts() {
   const el = id => document.getElementById(id);
   el('count-to_work').textContent =
     ((state.data.assigned_bugs || []).length +
-     (state.data.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED').length);
+      (state.data.all_bugs || []).filter(b => String(b.status).toUpperCase() === 'REOPENED').length);
   el('count-assigned').textContent = (state.data.assigned_bugs || []).length;
   el('count-review').textContent = (state.data.review_bugs || []).length;
   el('count-reopened').textContent =

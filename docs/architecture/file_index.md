@@ -69,7 +69,7 @@ Complete inventory of every file in the project with its purpose, responsibiliti
 | `views/logsView.js` | Log viewer | `loadLogs()`, `initLogsView()` |
 | `render/templates.js` | Shared HTML helpers | `statusBadgeClass()` |
 | `utils/constants.js` | Shared constants | `ALL_COLS`, `TAB_KEYS`, `COL_FIELD`, `LS_*`, `DEF_*` |
-| `utils/dom.js` | DOM utilities | `esc()`, `copyBugId()`, `copyBugFullName()` |
+| `utils/dom.js` | DOM utilities | `esc()`, `copyBugId()`, `copyBugFullName()`, `extractNumericBugId()`, `removeBugIdPrefix()`, `buildBugMarkdownLink()`, `copyRichTextToClipboard()`, `buildBugClipboardPayload()` |
 | `utils/priorities.js` | Priority system | `getLocalSubPrios()`, `moveSubPrio()`, `purgeNonAssignedPrios()`, `autoAssignSubPrios()`, `normaliseSubPrios()` |
 | `pwa/register.js` | SW registration | `registerServiceWorker()` |
 

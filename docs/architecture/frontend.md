@@ -33,7 +33,7 @@ webapp/
     │   └── templates.js    Badge CSS classes, shared HTML helpers
     ├── utils/
     │   ├── constants.js    Column definitions, tab keys, localStorage keys
-    │   ├── dom.js          HTML escaping, clipboard helpers
+    │   ├── dom.js          HTML escaping, clipboard, rich text copy helpers
     │   └── priorities.js   Local sub-priority system (localStorage-backed)
     └── pwa/
         └── register.js     Service worker registration
