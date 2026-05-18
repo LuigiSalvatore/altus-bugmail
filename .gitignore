@@ -1,3 +1,4 @@
 bugzilla_config.json
 bugzilla_data.json
 logs/
+*.zip
