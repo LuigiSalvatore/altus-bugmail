@@ -69,6 +69,9 @@ export async function loadConfig(renderColToggles) {
   if (state.config.sort_dir !== undefined) {
     state.sortDir = state.config.sort_dir;
   }
+  if (state.config.col_widths) {
+    state.colWidths = state.config.col_widths;
+  }
   if (renderColToggles) renderColToggles();
 }
 

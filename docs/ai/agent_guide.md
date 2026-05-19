@@ -8,6 +8,7 @@ Operational guide for AI coding agents working on the Bugzilla Tracker codebase.
 |----------------|-----------|
 | Add a new API endpoint | `backend/routes/` — create or edit a blueprint |
 | Change bug table columns | `webapp/js/utils/constants.js` → `ALL_COLS`, `COL_FIELD` |
+| Resize table columns | `webapp/js/views/bugTableView.js` → `_attachResizersGlobal()`, `webapp/style.css` → `.th-resizer` |
 | Modify the refresh cycle | `webapp/js/api/client.js` → `doRefresh()`, `webapp/js/ui/countdown.js` |
 | Change bug data normalization | `backend/services/bugzilla_service.py` → `normalize_bug()` |
 | Add a new sub-tab | `webapp/index.html` (add button), `webapp/js/utils/constants.js` (add to `TAB_KEYS`), `webapp/js/views/bugTableView.js` (add filter logic) |

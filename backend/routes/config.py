@@ -40,6 +40,8 @@ def post_config():
             cfg['sort_col'] = body['sort_col']
         if 'sort_dir' in body:
             cfg['sort_dir'] = body['sort_dir']
+        if 'col_widths' in body:
+            cfg['col_widths'] = body['col_widths']
         save_config(cfg)
         st['config'] = cfg
     return jsonify({'ok': True})

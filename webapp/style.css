@@ -588,6 +588,26 @@ header {
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  width: 150px;
+}
+
+.bug-table thead th[data-col="ID"] { width: 90px; }
+.bug-table thead th[data-col="Summary"] { width: 400px; }
+.bug-table thead th[data-col="Status"] { width: 110px; }
+
+.th-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+.th-resizer:hover, .th-resizer.resizing {
+  background: var(--accent);
+  opacity: 0.5;
 }
 
 .bug-table thead th:hover { color: var(--text-primary); }
@@ -611,7 +631,11 @@ header {
 }
 
 .bug-table tbody td:first-child { color: var(--accent-light); font-weight: 600; }
-.bug-table tbody td.col-summary  { color: var(--text-primary); max-width: 400px; }
+.bug-table tbody td.col-summary  { color: var(--text-primary); }
+
+.bug-table tbody td.truncate-cell {
+  max-width: 1px;
+}
 
 /* ─── Bug ID Cell (with copy buttons) ───────────────────────── */
 .bug-id-cell {
@@ -648,7 +672,7 @@ header {
 }
 
 .cell-truncate {
-  max-width: 320px;
+  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

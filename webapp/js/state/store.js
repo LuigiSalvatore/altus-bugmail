@@ -23,6 +23,9 @@ const state = {
   /** Countdown seconds until next auto-refresh. */
   countdown: 60,
 
+  /** Saved column widths */
+  colWidths: JSON.parse(localStorage.getItem('bz_col_widths') || '{}'),
+
   /** Which optional columns are visible in the bug table. */
   visibleCols: {
     Priority: true,

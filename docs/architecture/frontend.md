@@ -118,11 +118,13 @@ Single mutable object shared across all modules:
 - `sortCol` / `sortDir` — table sort state
 - `countdown` — seconds until next refresh
 - `visibleCols` — column visibility toggles
+- `colWidths` — saved widths for table columns
 
 ### Local State (`localStorage`)
 Persistent user preferences not synced to backend:
 - `bz_local_sub_prio` — per-bug priority ranking (To Work tab)
 - `bz_sort_col` / `bz_sort_dir` — table sort state
+- `bz_col_widths` — customized column widths for the bug table
 - `bz_commit_state` — commit prompt form values
 - `bz_branches_*` — branch lists per repository
 - `bz_repos` — repository list

@@ -12,6 +12,55 @@ import {
 } from '../utils/priorities.js';
 import { LS_SUB_PRIO, LS_SORT_COL, LS_SORT_DIR } from '../utils/constants.js';
 
+let _resizerGlobalsAttached = false;
+function _attachResizersGlobal() {
+  if (_resizerGlobalsAttached) return;
+  _resizerGlobalsAttached = true;
+  
+  let isResizing = false;
+  let currentTh = null;
+  let startX = 0;
+  let startWidth = 0;
+
+  document.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('th-resizer')) {
+      e.stopPropagation();
+      e.preventDefault();
+      isResizing = true;
+      currentTh = e.target.closest('th');
+      startX = e.pageX;
+      startWidth = currentTh.offsetWidth;
+      e.target.classList.add('resizing');
+      document.body.style.cursor = 'col-resize';
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing || !currentTh) return;
+    const newWidth = Math.max(40, startWidth + (e.pageX - startX));
+    currentTh.style.width = `${newWidth}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = '';
+      if (currentTh) {
+        const resizer = currentTh.querySelector('.th-resizer');
+        if (resizer) resizer.classList.remove('resizing');
+        const col = currentTh.dataset.col;
+        if (col) {
+          state.colWidths = state.colWidths || {};
+          state.colWidths[col] = currentTh.offsetWidth;
+          localStorage.setItem('bz_col_widths', JSON.stringify(state.colWidths));
+          api('POST', '/api/config', { col_widths: state.colWidths });
+        }
+        currentTh = null;
+      }
+    }
+  });
+}
+
 // ─── Drag-and-drop state ─────────────────────────────────────
 let _dragBugId = null;
 
@@ -88,13 +137,21 @@ export function renderBugTable() {
 
   // ── Table head ──
   const thead = document.getElementById('bug-table-head');
-  const pHead = isToWork ? `<th class="lp-th" title="Priority order">★ Prio</th>` : '';
+  const pHead = isToWork ? `<th class="lp-th" title="Priority order" style="width:60px;">★ Prio</th>` : '';
+  
+  const savedWidths = state.colWidths || {};
+
   thead.innerHTML = `<tr>${pHead}${cols.map(c => {
     const cls = state.sortCol === c ? (state.sortDir === 1 ? 'sort-asc' : 'sort-desc') : '';
-    return `<th class="${cls}" data-col="${c}">${c}</th>`;
+    const style = savedWidths[c] ? ` style="width: ${savedWidths[c]}px;"` : '';
+    return `<th class="${cls}" data-col="${c}"${style}>
+      ${c}
+      <div class="th-resizer"></div>
+    </th>`;
   }).join('')}</tr>`;
   thead.querySelectorAll('th[data-col]').forEach(th =>
-    th.addEventListener('click', () => {
+    th.addEventListener('click', (e) => {
+      if (e.target.classList.contains('th-resizer')) return;
       if (state.sortCol === th.dataset.col) state.sortDir *= -1;
       else { state.sortCol = th.dataset.col; state.sortDir = 1; }
       localStorage.setItem(LS_SORT_COL, state.sortCol);
@@ -114,10 +171,10 @@ export function renderBugTable() {
       ${isToWork ? `<td class="lp-cell">${prioBadgeHTML(bug.id)}</td>` : ''}
       ${cols.map(c => {
       if (c === 'ID') return `<td><div class="bug-id-cell"><span>${bug.id}</span><button class="copy-btn" data-copy-full="${bug.id}" data-copy-summary="${escapedSummary}" title="Copy full name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><button class="copy-btn" data-copy-id="${bug.id}" title="Copy bug ID"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h12v12H4z"/><path d="M8 8h12v12H8z"/></svg></button><button class="copy-btn" data-copy-link="${bug.id}" data-copy-summary="${escapedSummary}" title="Copy link as name"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button><button class="copy-btn set-current-btn${isCurrent ? ' is-current' : ''}" data-set-current="${bug.id}" title="${isCurrent ? 'Currently working on' : 'Set as current bug'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></button></div></td>`;
-      if (c === 'Summary') return `<td class="col-summary"><div class="cell-truncate">${esc(bug.summary || '')}</div></td>`;
+      if (c === 'Summary') return `<td class="col-summary truncate-cell"><div class="cell-truncate">${esc(bug.summary || '')}</div></td>`;
       if (c === 'Status') return `<td><span class="badge ${statusBadgeClass(bug.status)}">${esc(bug.status || '')}</span></td>`;
       const field = COL_FIELD[c] || c.toLowerCase();
-      return `<td><div class="cell-truncate">${esc(bug[field] || '')}</div></td>`;
+      return `<td class="truncate-cell"><div class="cell-truncate">${esc(bug[field] || '')}</div></td>`;
     }).join('')}
     </tr>`;
   }).join('');
@@ -127,6 +184,9 @@ export function renderBugTable() {
 
   // ── Wire up inline button events ──
   _attachButtonEvents();
+
+  // ── Attach Resizer Global Events ──
+  _attachResizersGlobal();
 
   // ── Drag-and-drop (To Work tab only) ──
   if (isToWork) _initDragReorder();
